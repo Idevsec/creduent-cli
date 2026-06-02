@@ -1,0 +1,53 @@
+{
+  "name": "@idevsec/creduent-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "CLI tool for the Creduent Protocol — resolve, verify, and register AI agent identities.",
+  "main": "./dist/esm/index.js",
+  "bin": {
+    "creduent": "./dist/esm/cli.js"
+  },
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:esm": "tsc",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "npm run build:esm && npm run build:cjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "creduent",
+    "cli",
+    "agent",
+    "identity",
+    "verification",
+    "idevsec"
+  ],
+  "author": "IDevSec",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/idevsec/creduent-cli"
+  },
+  "homepage": "https://github.com/idevsec/creduent-cli#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^5.3.3"
+  }
+}
