@@ -49,7 +49,7 @@ creduent resolve agent://creduent/reconbot
   Agent ID   : agent://creduent/reconbot
   Issuer     : agent://creduent/registry
   Level      : trusted
-  Domain     : api.idevsec.com
+  Domain     : registry.idevsec.com
   Public Key : ed25519:V43yNaTrpqQj9YJnjYVL2HdOrqUDcnflhzNGuHTaFD8=
   Registered : undefined
   Issued     : 2026-05-30T19:23:30Z
@@ -90,7 +90,7 @@ You can append these global options to any command:
 
 | Option | Description |
 | :--- | :--- |
-| `--base-url <url>` | Override the default public registry (`https://api.idevsec.com`) to query a private or local registry. |
+| `--base-url <url>` | Override the default public registry (`https://registry.idevsec.com`) to query a private or local registry. |
 | `--help` | Show the help menu listing all commands and flags. |
 
 **Example using a custom registry:**

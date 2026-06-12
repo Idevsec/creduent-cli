@@ -26,7 +26,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1mregister\x1b[0m \x1b[35m[options]\x1b[0m         \x1b[90mRegister a new agent identity with the registry\x1b[0m
 
 \x1b[1m\x1b[35mGLOBAL OPTIONS:\x1b[0m
-  \x1b[1m--base-url\x1b[0m \x1b[33m<url>\x1b[0m          \x1b[90mUse a custom registry URL (default: https://api.idevsec.com)\x1b[0m
+  \x1b[1m--base-url\x1b[0m \x1b[33m<url>\x1b[0m          \x1b[90mUse a custom registry URL (default: https://registry.idevsec.com)\x1b[0m
   \x1b[1m--help\x1b[0m                    \x1b[90mShow this help message\x1b[0m
 
 \x1b[1m\x1b[35mINIT OPTIONS:\x1b[0m
