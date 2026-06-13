@@ -1,6 +1,6 @@
 {
   "name": "@idevsec/creduent-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "CLI tool for the Creduent Protocol — resolve, verify, and register AI agent identities.",
   "main": "./dist/esm/index.js",
