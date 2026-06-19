@@ -5,18 +5,20 @@
 [![Node Compatibility](https://img.shields.io/node/v/@idevsec/creduent-cli.svg)](https://nodejs.org/)
 [![Downloads](https://img.shields.io/npm/dm/@idevsec/creduent-cli.svg)](https://www.npmjs.com/package/@idevsec/creduent-cli)
 
-The official command-line interface (CLI) tool for the **Creduent Protocol** — a federated, open trust-verification layer and cryptographic identity infrastructure for autonomous AI agents.
+The official command-line interface for the **[Creduent Protocol](https://idevsec.com/creduent)** — the open standard for cryptographic AI agent identity, Ed25519 signing, DNS ownership verification, and attestation registry.
 
-The Creduent CLI allows developers, operators, and hosts to resolve attestation records, verify agent trust status, and register new agent identities directly from the terminal.
+The Creduent CLI allows developers, operators, and agent hosts to resolve attestation records, verify agent trust status, and register new agent identities directly from the terminal.
+
+> **Protocol**: [idevsec.com/creduent](https://idevsec.com/creduent) | **Docs**: [idevsec.com/creduent/docs](https://idevsec.com/creduent/docs) | **Registry**: [registry.idevsec.com](https://registry.idevsec.com)
 
 ---
 
 ## Key Features
 
-- 🛠️ **Command-Line Native**: Lightweight and fast terminal utility optimized for scripts, pipelines, and DevOps workflows.
-- 🏛️ **Full Registry Integration**: Seamlessly register new agents, resolve identity records, and perform cryptographic signature validation.
-- ⚙️ **Custom Registry Selection**: Target private or custom local registry instances using the `--base-url` parameter.
-- 📦 **No Complex Configuration**: Simply install and run, no local database setup required.
+- **Command-Line Native**: Lightweight and fast terminal utility optimized for scripts, pipelines, and DevOps workflows.
+- **Full Registry Integration**: Seamlessly register new agents, resolve identity records, and perform cryptographic signature validation.
+- **Custom Registry Selection**: Target private or custom local registry instances using the `--base-url` parameter.
+- **No Complex Configuration**: Simply install and run, no local database setup required.
 
 ---
 
@@ -43,9 +45,9 @@ creduent resolve agent://creduent/reconbot
 
 **Example Output:**
 ```text
-🔍 Resolving: agent://creduent/reconbot
+Resolving: agent://creduent/reconbot
 
-✅ Agent Record:
+Agent Record:
   Agent ID   : agent://creduent/reconbot
   Issuer     : agent://creduent/registry
   Level      : trusted
@@ -65,8 +67,8 @@ Queries the registry to quickly check if an agent has an active, trusted status 
 creduent verify agent://creduent/reconbot
 ```
 
-* **If Verified**: Prints `✅ Agent is VERIFIED and trusted.` (Exits with code `0`).
-* **If Not Verified / Expired**: Prints `⚠️ Agent is NOT verified or not registered.` (Exits with code `1`).
+* **If Verified**: Prints `Agent is VERIFIED and trusted.` (Exits with code `0`).
+* **If Not Verified / Expired**: Prints `Agent is NOT verified or not registered.` (Exits with code `1`).
 
 ---
 
@@ -102,10 +104,14 @@ creduent resolve agent://myorg/mybot --base-url http://localhost:8000
 
 ## Protocol Specification
 
-For details on JCS canonicalization, agent cryptographic validation schemes, and the core protocol workflow, read the complete [Creduent Protocol Specification](https://github.com/idevsec/creduent).
+For details on JCS canonicalization, agent cryptographic validation schemes, and the core protocol workflow:
+
+- **Protocol overview**: [idevsec.com/creduent](https://idevsec.com/creduent)
+- **Technical reference**: [idevsec.com/creduent/docs](https://idevsec.com/creduent/docs)
+- **Standards documents**: [github.com/idevsec/creduent](https://github.com/idevsec/creduent) (CREDUENT-001 through CREDUENT-005)
 
 ---
 
 ## License
 
-This CLI is licensed under a Dual License model (Apache 2.0 or Commercial). See [LICENSE](LICENSE) for details.
+This CLI is dual-licensed: Apache 2.0 for open-source and non-commercial use. Commercial license required for organizations with annual revenue exceeding USD $1,000,000. See [idevsec.com/creduent/licensing](https://idevsec.com/creduent/licensing) for full details.
