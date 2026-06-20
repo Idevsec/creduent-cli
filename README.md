@@ -7,7 +7,7 @@
 
 The official command-line interface for the **[Creduent Protocol](https://idevsec.com/creduent)** — the open standard for cryptographic AI agent identity, Ed25519 signing, DNS ownership verification, and attestation registry.
 
-The Creduent CLI allows developers, operators, and agent hosts to resolve attestation records, verify agent trust status, and register new agent identities directly from the terminal.
+The Creduent CLI allows developers, operators, and agent hosts to initialize agent identities, resolve attestation records, cryptographically verify agent trust status, and register new agents directly from the terminal.
 
 > **Protocol**: [idevsec.com/creduent](https://idevsec.com/creduent) | **Docs**: [idevsec.com/creduent/docs](https://idevsec.com/creduent/docs) | **Registry**: [registry.idevsec.com](https://registry.idevsec.com)
 
@@ -15,6 +15,7 @@ The Creduent CLI allows developers, operators, and agent hosts to resolve attest
 
 ## Key Features
 
+- **Native Cryptographic Verification**: The `verify` command uses the `@idevsec/creduent` SDK to validate Ed25519 signatures locally — no centralized API trust required.
 - **Command-Line Native**: Lightweight and fast terminal utility optimized for scripts, pipelines, and DevOps workflows.
 - **Full Registry Integration**: Seamlessly register new agents, resolve identity records, and perform cryptographic signature validation.
 - **Custom Registry Selection**: Target private or custom local registry instances using the `--base-url` parameter.
@@ -23,8 +24,6 @@ The Creduent CLI allows developers, operators, and agent hosts to resolve attest
 ---
 
 ## Installation
-
-Install the CLI tool globally via npm:
 
 ```bash
 npm install -g @idevsec/creduent-cli
@@ -36,8 +35,69 @@ Once installed, you can access the CLI using the `creduent` command.
 
 ## Command Reference & Examples
 
-### 1. Resolve an Agent Attestation
-Fetches and displays the complete cryptographic attestation record of a registered agent by its canonical `agent://` URI.
+### 1. Initialize a New Agent Identity
+
+Generates a fresh Ed25519 keypair, builds a signed `agent.json` document, and saves both to disk.
+
+```bash
+# Interactive setup
+creduent init
+
+# Non-interactive with flags
+creduent init \
+  --agent agent://myorg/mybot \
+  --owner "My Organization" \
+  --domain myorg.com \
+  --endpoint https://api.myorg.com/agent \
+  --capabilities "chat,search" \
+  -y
+```
+
+**Example Output:**
+```text
+Generating Ed25519 key pair...
+Signing agent.json metadata...
+Private key saved to: private_key.pem (KEEP THIS SECRET!)
+Signed agent.json saved to: agent.json
+
+YOUR PUBLIC KEY:
+  ed25519:V43yNaTrpqQj9YJnjYVL2HdOrqUDcnflhzNGuHTaFD8=
+
+Setup completed successfully!
+To publish and verify this identity:
+  1. Host agent.json at: https://myorg.com/.well-known/agent.json
+  2. Add a DNS TXT record for _creduent.myorg.com
+  3. Register your agent: creduent register --agent agent://myorg/mybot ...
+```
+
+---
+
+### 2. Verify an Agent (Native Cryptographic)
+
+Downloads the agent identity document and validates the Ed25519 signature locally using the `@idevsec/creduent` SDK. No centralized trust — verification is fully decentralized.
+
+```bash
+creduent verify agent://creduent/reconbot
+```
+
+**Example Output (verified):**
+```text
+Cryptographically VERIFIED!
+Agent ID:     agent://creduent/reconbot
+Owner:        IDevSec
+Capabilities: verify, resolve, attest
+```
+
+**Example Output (failed):**
+```text
+Verification failed: Signature verification failed
+```
+
+---
+
+### 3. Resolve an Agent Attestation
+
+Fetches and displays the complete cryptographic attestation record of a registered agent from the registry.
 
 ```bash
 creduent resolve agent://creduent/reconbot
@@ -47,39 +107,26 @@ creduent resolve agent://creduent/reconbot
 ```text
 Resolving: agent://creduent/reconbot
 
-Agent Record:
   Agent ID   : agent://creduent/reconbot
   Issuer     : agent://creduent/registry
   Level      : trusted
   Domain     : registry.idevsec.com
   Public Key : ed25519:V43yNaTrpqQj9YJnjYVL2HdOrqUDcnflhzNGuHTaFD8=
-  Registered : undefined
   Issued     : 2026-05-30T19:23:30Z
   Expires    : 2027-05-30T19:23:30Z
 ```
 
 ---
 
-### 2. Verify Agent Status
-Queries the registry to quickly check if an agent has an active, trusted status (`verified` or `trusted`).
+### 4. Register a New Agent
 
-```bash
-creduent verify agent://creduent/reconbot
-```
-
-* **If Verified**: Prints `Agent is VERIFIED and trusted.` (Exits with code `0`).
-* **If Not Verified / Expired**: Prints `Agent is NOT verified or not registered.` (Exits with code `1`).
-
----
-
-### 3. Register a New Agent
 Registers a new AI agent identity with the Creduent registry by submitting its URI, domain, and the URL to its `agent.json` metadata document.
 
 ```bash
 creduent register \
   --agent agent://myorg/mybot \
   --domain myorg.com \
-  --json-url https://myorg.com/agent.json \
+  --json-url https://myorg.com/.well-known/agent.json \
   --meta env=production \
   --meta version=1.0
 ```
@@ -88,8 +135,6 @@ creduent register \
 
 ## Global Options
 
-You can append these global options to any command:
-
 | Option | Description |
 | :--- | :--- |
 | `--base-url <url>` | Override the default public registry (`https://registry.idevsec.com`) to query a private or local registry. |
@@ -97,17 +142,29 @@ You can append these global options to any command:
 
 **Example using a custom registry:**
 ```bash
-creduent resolve agent://myorg/mybot --base-url http://localhost:8000
+creduent verify agent://myorg/mybot --base-url http://localhost:8000
 ```
+
+---
+
+## How Verification Works
+
+Starting from Phase 4, `creduent verify` performs fully decentralized cryptographic verification:
+
+1. Resolves the `agent://` URI to the agent's published `agent.json` document.
+2. Strips the `signature` field and applies RFC 8785 JCS canonicalization.
+3. Verifies the Ed25519 signature against the document's declared public key using `globalThis.crypto.subtle` (Web Crypto API).
+4. Returns the verified agent ID and capabilities on success.
+
+This means verification works entirely offline once the document is fetched, and does not depend on the registry being live or trusted.
 
 ---
 
 ## Protocol Specification
 
-For details on JCS canonicalization, agent cryptographic validation schemes, and the core protocol workflow:
-
 - **Protocol overview**: [idevsec.com/creduent](https://idevsec.com/creduent)
 - **Technical reference**: [idevsec.com/creduent/docs](https://idevsec.com/creduent/docs)
+- **JS SDK**: [github.com/idevsec/creduent-js](https://github.com/idevsec/creduent-js)
 - **Standards documents**: [github.com/idevsec/creduent](https://github.com/idevsec/creduent) (CREDUENT-001 through CREDUENT-005)
 
 ---

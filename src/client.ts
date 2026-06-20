@@ -91,28 +91,37 @@ async function request<T>(
 export async function resolveAgent(uri: string, options?: ClientOptions): Promise<AgentRecord> {
   const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
   const normalizedUri = normalizeAgentUri(uri);
-  
+
   // Construct the URL: e.g. https://registry.idevsec.com/agent://creduent/reconbot
   const url = `${baseUrl}/${normalizedUri}`;
   return request<AgentRecord>(url, "GET", undefined, options);
 }
 
+import { verify, VerifyResult } from "@idevsec/creduent";
+
 /**
- * Verifies an AI agent identity and confirms their attestation state.
+ * Verifies an AI agent identity natively using Ed25519 Web Crypto signatures.
+ * Downloads the identity document and checks cryptographic integrity locally.
  * 
  * @param uri The agent:// URI of the AI agent
  * @param options Configurable options including custom registry baseUrl
- * @returns True if the agent is registered and has a level of "verified", false otherwise
+ * @returns Cryptographic Verification Result
  */
-export async function verifyAgent(uri: string, options?: ClientOptions): Promise<boolean> {
+export async function verifyAgent(uri: string, options?: ClientOptions): Promise<VerifyResult> {
+  const originalEnv = process.env.CREDUENT_REGISTRY_URL;
+  if (options?.baseUrl) {
+    process.env.CREDUENT_REGISTRY_URL = options.baseUrl;
+  }
+
   try {
-    const record = await resolveAgent(uri, options);
-    return record.level === "verified" || record.level === "trusted";
-  } catch (error) {
-    if (error instanceof AgentNotFoundError) {
-      return false;
+    const result = await verify(uri);
+    return result;
+  } finally {
+    if (originalEnv !== undefined) {
+      process.env.CREDUENT_REGISTRY_URL = originalEnv;
+    } else {
+      delete process.env.CREDUENT_REGISTRY_URL;
     }
-    throw error;
   }
 }
 
@@ -125,7 +134,7 @@ export async function verifyAgent(uri: string, options?: ClientOptions): Promise
  */
 export async function registerAgent(payload: RegisterPayload, options?: ClientOptions): Promise<AgentRecord> {
   const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
-  
+
   // Normalise the agent ID inside payload
   const normalizedPayload = {
     ...payload,

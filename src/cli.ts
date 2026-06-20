@@ -250,11 +250,14 @@ async function main() {
     }
     try {
       console.log(`\n\x1b[36m🔐 Verifying:\x1b[0m \x1b[1m${uri}\x1b[0m`);
-      const verified = await verifyAgent(uri, clientOptions);
-      if (verified) {
-        console.log(`\x1b[1m\x1b[32m✅ Agent is VERIFIED and trusted.\x1b[0m\n`);
+      const result = await verifyAgent(uri, clientOptions);
+      if (result.valid) {
+        console.log(`\x1b[1m\x1b[32m✅ Cryptographically VERIFIED!\x1b[0m`);
+        console.log(`\x1b[90mAgent ID:\x1b[0m     \x1b[36m${result.agent_id}\x1b[0m`);
+        console.log(`\x1b[90mOwner:\x1b[0m        ${result.document?.owner}`);
+        console.log(`\x1b[90mCapabilities:\x1b[0m ${result.document?.capabilities?.join(", ")}\n`);
       } else {
-        console.log(`\x1b[1m\x1b[33m⚠️  Agent is NOT verified or not registered.\x1b[0m\n`);
+        console.log(`\x1b[1m\x1b[31m❌ Verification failed:\x1b[0m ${result.reason}\n`);
         process.exit(1);
       }
     } catch (err) {

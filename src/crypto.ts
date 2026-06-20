@@ -1,34 +1,6 @@
 import { generateKeyPairSync, sign, createPrivateKey } from "crypto";
 
-/**
- * Canonicalizes a JSON object according to RFC 8785 (JCS).
- * Lexicographically sorts object keys, removes unnecessary whitespace,
- * and serializes primitive types, arrays, and nested objects.
- */
-export function canonicalize(obj: any): string {
-  if (obj === null) {
-    return "null";
-  }
-  if (typeof obj !== "object") {
-    return JSON.stringify(obj);
-  }
-  if (Array.isArray(obj)) {
-    return "[" + obj.map(item => canonicalize(item)).join(",") + "]";
-  }
-
-  // Sort keys lexicographically (UTF-16 code units)
-  const keys = Object.keys(obj).sort();
-  const parts: string[] = [];
-
-  for (const key of keys) {
-    const value = obj[key];
-    if (value !== undefined) {
-      parts.push(JSON.stringify(key) + ":" + canonicalize(value));
-    }
-  }
-
-  return "{" + parts.join(",") + "}";
-}
+import { canonicalize } from "@idevsec/creduent";
 
 /**
  * Generates a new Ed25519 keypair.
