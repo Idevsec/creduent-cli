@@ -149,7 +149,7 @@ creduent verify agent://myorg/mybot --base-url http://localhost:8000
 
 ## How Verification Works
 
-Starting from Phase 4, `creduent verify` performs fully decentralized cryptographic verification:
+Starting from Phase 3, `creduent verify` performs fully decentralized cryptographic verification:
 
 1. Resolves the `agent://` URI to the agent's published `agent.json` document.
 2. Strips the `signature` field and applies RFC 8785 JCS canonicalization.
