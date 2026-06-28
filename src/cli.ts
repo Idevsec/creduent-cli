@@ -202,11 +202,11 @@ async function main() {
     const force = "force" in flags || "f" in flags || args.includes("-f") || args.includes("--force");
     if (!force) {
       if (existsSync(privateKeyPath)) {
-        console.error(`\x1b[1m\x1b[31m❌ Error: ${privateKeyPath} already exists. Aborting to prevent overwriting existing keys. Use --force to override.\x1b[0m`);
+        console.error(`\x1b[1m\x1b[31mError: ${privateKeyPath} already exists. Aborting to prevent overwriting existing keys. Use --force to override.\x1b[0m`);
         process.exit(1);
       }
       if (existsSync(agentJsonPath)) {
-        console.error(`\x1b[1m\x1b[31m❌ Error: ${agentJsonPath} already exists. Aborting to prevent overwriting metadata. Use --force to override.\x1b[0m`);
+        console.error(`\x1b[1m\x1b[31mError: ${agentJsonPath} already exists. Aborting to prevent overwriting metadata. Use --force to override.\x1b[0m`);
         process.exit(1);
       }
     }
@@ -239,7 +239,7 @@ async function main() {
       ? capabilitiesStr.split(",").map(c => c.trim()).filter(Boolean)
       : [];
 
-    console.log(`\n\x1b[36m🔑 Generating Ed25519 key pair...\x1b[0m`);
+    console.log(`\n\x1b[36mGenerating Ed25519 key pair...\x1b[0m`);
     const { privateKeyPem, publicKeyStr } = generateKeys();
 
     const draftDoc = {
@@ -251,27 +251,27 @@ async function main() {
       capabilities
     };
 
-    console.log(`\x1b[36m✍️  Signing agent.json metadata...\x1b[0m`);
+    console.log(`\x1b[36mSigning agent.json metadata...\x1b[0m`);
     const signedDoc = signDocument(draftDoc, privateKeyPem);
 
     try {
       await fs.writeFile(privateKeyPath, privateKeyPem, { encoding: "utf-8", mode: 0o600 });
-      console.log(`\x1b[1m\x1b[32m✅ Private key saved to:\x1b[0m ${privateKeyPath} \x1b[90m(KEEP THIS SECRET!)\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32mPrivate key saved to:\x1b[0m ${privateKeyPath} \x1b[90m(KEEP THIS SECRET!)\x1b[0m`);
 
       await fs.writeFile(agentJsonPath, JSON.stringify(signedDoc, null, 2), "utf-8");
-      console.log(`\x1b[1m\x1b[32m✅ Signed agent.json saved to:\x1b[0m ${agentJsonPath}\n`);
+      console.log(`\x1b[1m\x1b[32mSigned agent.json saved to:\x1b[0m ${agentJsonPath}\n`);
 
       console.log(`\x1b[1m\x1b[33mYOUR PUBLIC KEY:\x1b[0m`);
       console.log(`  \x1b[36m${publicKeyStr}\x1b[0m\n`);
 
-      console.log(`\x1b[1m\x1b[32m🚀 Setup completed successfully!\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32mSetup completed successfully!\x1b[0m`);
       console.log(`To publish and verify this identity:`);
       console.log(`  1. Host \x1b[1magent.json\x1b[0m at: \x1b[4mhttps://${domain}/.well-known/agent.json\x1b[0m`);
       console.log(`  2. Add a DNS TXT record for \x1b[1m_creduent.${domain}\x1b[0m containing: \x1b[36m${agent}\x1b[0m`);
       console.log(`  3. Register your agent:`);
       console.log(`     \x1b[1mcreduent register --agent ${agent} --domain ${domain} --json-url https://${domain}/.well-known/agent.json\x1b[0m\n`);
     } catch (err) {
-      console.error(`\x1b[1m\x1b[31m❌ Error writing files:\x1b[0m ${err}`);
+      console.error(`\x1b[1m\x1b[31mError writing files:\x1b[0m ${err}`);
       process.exit(1);
     }
   }
@@ -280,20 +280,20 @@ async function main() {
   else if (command === "resolve") {
     const uri = args[1];
     if (!uri) {
-      console.error("\x1b[1m\x1b[31m❌ Error: Please provide an agent URI.\x1b[0m\n\x1b[90m   Usage: creduent resolve agent://domain/name\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Please provide an agent URI.\x1b[0m\n\x1b[90m   Usage: creduent resolve agent://domain/name\x1b[0m");
       process.exit(1);
     }
     try {
-      console.log(`\n\x1b[36m🔍 Resolving:\x1b[0m \x1b[1m${uri}\x1b[0m`);
+      console.log(`\n\x1b[36mResolving:\x1b[0m \x1b[1m${uri}\x1b[0m`);
       const record = await resolveAgent(uri, clientOptions);
       printRecord(record);
     } catch (err) {
       if (err instanceof AgentNotFoundError) {
-        console.error(`\x1b[1m\x1b[31m❌ Agent not found:\x1b[0m ${uri}`);
+        console.error(`\x1b[1m\x1b[31mAgent not found:\x1b[0m ${uri}`);
       } else if (err instanceof CreduentError) {
-        console.error(`\x1b[1m\x1b[31m❌ Registry error:\x1b[0m ${err.message}`);
+        console.error(`\x1b[1m\x1b[31mRegistry error:\x1b[0m ${err.message}`);
       } else {
-        console.error(`\x1b[1m\x1b[31m❌ Unexpected error:\x1b[0m ${err}`);
+        console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err}`);
       }
       process.exit(1);
     }
@@ -303,26 +303,26 @@ async function main() {
   else if (command === "verify") {
     const uri = args[1];
     if (!uri) {
-      console.error("\x1b[1m\x1b[31m❌ Error: Please provide an agent URI.\x1b[0m\n\x1b[90m   Usage: creduent verify agent://domain/name\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Please provide an agent URI.\x1b[0m\n\x1b[90m   Usage: creduent verify agent://domain/name\x1b[0m");
       process.exit(1);
     }
     try {
-      console.log(`\n\x1b[36m🔐 Verifying:\x1b[0m \x1b[1m${uri}\x1b[0m`);
+      console.log(`\n\x1b[36mVerifying:\x1b[0m \x1b[1m${uri}\x1b[0m`);
       const result = await verifyAgent(uri, clientOptions);
       if (result.valid) {
-        console.log(`\x1b[1m\x1b[32m✅ Cryptographically VERIFIED!\x1b[0m`);
+        console.log(`\x1b[1m\x1b[32mCryptographically VERIFIED!\x1b[0m`);
         console.log(`\x1b[90mAgent ID:\x1b[0m     \x1b[36m${result.agent_id}\x1b[0m`);
         console.log(`\x1b[90mOwner:\x1b[0m        ${result.document?.owner}`);
         console.log(`\x1b[90mCapabilities:\x1b[0m ${result.document?.capabilities?.join(", ")}\n`);
       } else {
-        console.log(`\x1b[1m\x1b[31m❌ Verification failed:\x1b[0m ${result.reason}\n`);
+        console.log(`\x1b[1m\x1b[31mVerification failed:\x1b[0m ${result.reason}\n`);
         process.exit(1);
       }
     } catch (err) {
       if (err instanceof CreduentError) {
-        console.error(`\x1b[1m\x1b[31m❌ Registry error:\x1b[0m ${err.message}`);
+        console.error(`\x1b[1m\x1b[31mRegistry error:\x1b[0m ${err.message}`);
       } else {
-        console.error(`\x1b[1m\x1b[31m❌ Unexpected error:\x1b[0m ${err}`);
+        console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err}`);
       }
       process.exit(1);
     }
@@ -335,24 +335,24 @@ async function main() {
     const jsonUrl = flags["json-url"];
 
     if (!agent || !domain || !jsonUrl) {
-      console.error("\x1b[1m\x1b[31m❌ Error: Missing required flags.\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Missing required flags.\x1b[0m");
       console.error("\x1b[90m   Usage: creduent register --agent <uri> --domain <domain> --json-url <url>\x1b[0m");
       process.exit(1);
     }
 
     try {
-      console.log(`\n\x1b[36m📝 Registering agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+      console.log(`\n\x1b[36mRegistering agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
       const record = await registerAgent(
         { agent_id: agent, domain, agent_json_url: jsonUrl, metadata: meta },
         clientOptions
       );
-      console.log("\x1b[1m\x1b[32m✅ Agent registered successfully!\x1b[0m");
+      console.log("\x1b[1m\x1b[32mAgent registered successfully!\x1b[0m");
       printRecord(record);
     } catch (err) {
       if (err instanceof CreduentError) {
-        console.error(`\x1b[1m\x1b[31m❌ Registry error:\x1b[0m ${err.message}`);
+        console.error(`\x1b[1m\x1b[31mRegistry error:\x1b[0m ${err.message}`);
       } else {
-        console.error(`\x1b[1m\x1b[31m❌ Unexpected error:\x1b[0m ${err}`);
+        console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err}`);
       }
       process.exit(1);
     }
@@ -366,13 +366,13 @@ async function main() {
     const keyPath = flags["key"] || "./private_key.pem";
 
     if (!agent) {
-      console.error("\x1b[1m\x1b[31m❌ Error: Please provide an agent URI via --agent.\x1b[0m\n\x1b[90m   Usage: creduent renew --agent <uri> [--days <number>] [--key <path>]\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Please provide an agent URI via --agent.\x1b[0m\n\x1b[90m   Usage: creduent renew --agent <uri> [--days <number>] [--key <path>]\x1b[0m");
       process.exit(1);
     }
 
     const days = daysStr ? parseInt(daysStr, 10) : 365;
     if (isNaN(days)) {
-      console.error("\x1b[1m\x1b[31m❌ Error: Invalid value for --days.\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Invalid value for --days.\x1b[0m");
       process.exit(1);
     }
 
@@ -390,19 +390,19 @@ async function main() {
         new_expires_at
       };
 
-      console.log(`\n\x1b[36m✍️  Signing renewal request for agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+      console.log(`\n\x1b[36mSigning renewal request for agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
       const signature = signPayload(payload, privateKeyPem);
 
-      console.log(`\x1b[36m🔄 Sending renewal request to registry...\x1b[0m`);
+      console.log(`\x1b[36mSending renewal request to registry...\x1b[0m`);
       const record = await (await import("./client.js")).renewAgent(
         { agent_id: agent, new_expires_at, signature },
         clientOptions
       );
 
-      console.log("\x1b[1m\x1b[32m✅ Agent renewed successfully!\x1b[0m");
+      console.log("\x1b[1m\x1b[32mAgent renewed successfully!\x1b[0m");
       printRecord(record);
     } catch (err: any) {
-      console.error(`\x1b[1m\x1b[31m❌ Error:\x1b[0m ${err.message || err}`);
+      console.error(`\x1b[1m\x1b[31mError:\x1b[0m ${err.message || err}`);
       process.exit(1);
     }
   }
@@ -416,7 +416,7 @@ async function main() {
       const keyPath = flags["key"] || "./private_key.pem";
 
       if (!agent || !url) {
-        console.error("\x1b[1m\x1b[31m❌ Error: Missing required flags.\x1b[0m");
+        console.error("\x1b[1m\x1b[31mError: Missing required flags.\x1b[0m");
         console.error("\x1b[90m   Usage: creduent webhook register --agent <uri> --url <webhook-url> [--key <path>]\x1b[0m");
         process.exit(1);
       }
@@ -430,39 +430,39 @@ async function main() {
           webhook_url: url
         };
 
-        console.log(`\n\x1b[36m✍️  Signing webhook registration for agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+        console.log(`\n\x1b[36mSigning webhook registration for agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
         const signature = signPayload(payload, privateKeyPem);
 
-        console.log(`\x1b[36m🔄 Registering webhook URL: ${url}...\x1b[0m`);
+        console.log(`\x1b[36mRegistering webhook URL: ${url}...\x1b[0m`);
         const result = await (await import("./client.js")).registerWebhook(
           { agent_id: agent, webhook_url: url, signature },
           clientOptions
         );
-        console.log("\x1b[1m\x1b[32m✅ Webhook registered successfully!\x1b[0m");
+        console.log("\x1b[1m\x1b[32mWebhook registered successfully!\x1b[0m");
         console.log(`\x1b[90mAgent ID:\x1b[0m    \x1b[36m${result.agent_id}\x1b[0m`);
         console.log(`\x1b[90mWebhook URL:\x1b[0m \x1b[4m${result.webhook_url}\x1b[0m\n`);
       } catch (err: any) {
-        console.error(`\x1b[1m\x1b[31m❌ Error:\x1b[0m ${err.message || err}`);
+        console.error(`\x1b[1m\x1b[31mError:\x1b[0m ${err.message || err}`);
         process.exit(1);
       }
     } else if (subCommand === "query") {
       const agent = flags["agent"];
       if (!agent) {
-        console.error("\x1b[1m\x1b[31m❌ Error: Please provide an agent URI via --agent.\x1b[0m\n\x1b[90m   Usage: creduent webhook query --agent <uri>\x1b[0m");
+        console.error("\x1b[1m\x1b[31mError: Please provide an agent URI via --agent.\x1b[0m\n\x1b[90m   Usage: creduent webhook query --agent <uri>\x1b[0m");
         process.exit(1);
       }
 
       try {
-        console.log(`\n\x1b[36m🔍 Querying webhook for:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+        console.log(`\n\x1b[36mQuerying webhook for:\x1b[0m \x1b[1m${agent}\x1b[0m`);
         const result = await (await import("./client.js")).queryWebhook(agent, clientOptions);
         console.log(`\x1b[90mAgent ID:\x1b[0m    \x1b[36m${result.agent_id}\x1b[0m`);
         console.log(`\x1b[90mWebhook URL:\x1b[0m \x1b[4m${result.webhook_url}\x1b[0m\n`);
       } catch (err: any) {
-        console.error(`\x1b[1m\x1b[31m❌ Error:\x1b[0m ${err.message || err}`);
+        console.error(`\x1b[1m\x1b[31mError:\x1b[0m ${err.message || err}`);
         process.exit(1);
       }
     } else {
-      console.error("\x1b[1m\x1b[31m❌ Error: Invalid webhook sub-command. Must be 'register' or 'query'.\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Invalid webhook sub-command. Must be 'register' or 'query'.\x1b[0m");
       console.error("\x1b[90m   Usage:\x1b[0m\n     creduent webhook register --agent <uri> --url <url>\n     creduent webhook query --agent <uri>");
       process.exit(1);
     }
@@ -475,7 +475,7 @@ async function main() {
     const keyPath = flags["key"] || "./private_key.pem";
 
     if (!targetUri) {
-      console.error("\x1b[1m\x1b[31m❌ Error: Please provide a target agent URI to discover.\x1b[0m\n\x1b[90m   Usage: creduent discover <target-uri> [--as <my-agent-uri>] [--key <path>]\x1b[0m");
+      console.error("\x1b[1m\x1b[31mError: Please provide a target agent URI to discover.\x1b[0m\n\x1b[90m   Usage: creduent discover <target-uri> [--as <my-agent-uri>] [--key <path>]\x1b[0m");
       process.exit(1);
     }
 
@@ -487,9 +487,9 @@ async function main() {
         const { loadPrivateKey } = await import("./crypto.js");
         myAgentId = asAgent;
         privateKeyPem = loadPrivateKey(keyPath);
-        console.log(`\n\x1b[36m🔍 Discovering (Authenticated as ${asAgent}):\x1b[0m \x1b[1m${targetUri}\x1b[0m`);
+        console.log(`\n\x1b[36mDiscovering (Authenticated as ${asAgent}):\x1b[0m \x1b[1m${targetUri}\x1b[0m`);
       } else {
-        console.log(`\n\x1b[36m🔍 Discovering (Public):\x1b[0m \x1b[1m${targetUri}\x1b[0m`);
+        console.log(`\n\x1b[36mDiscovering (Public):\x1b[0m \x1b[1m${targetUri}\x1b[0m`);
       }
 
       const result = await (await import("./client.js")).discoverAgent(
@@ -500,7 +500,7 @@ async function main() {
       );
 
       if (result.error && !result.capabilities) {
-        console.error(`\x1b[1m\x1b[31m❌ Discovery failed:\x1b[0m ${result.error}`);
+        console.error(`\x1b[1m\x1b[31mDiscovery failed:\x1b[0m ${result.error}`);
         process.exit(1);
       }
 
@@ -522,11 +522,11 @@ async function main() {
       }
       console.log(`\x1b[1m\x1b[32m└────────────────────────────────────────────────────────────────────────\x1b[0m\n`);
     } catch (err: any) {
-      console.error(`\x1b[1m\x1b[31m❌ Unexpected error:\x1b[0m ${err.message || err}`);
+      console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err.message || err}`);
       process.exit(1);
     }
   } else {
-    console.error(`\x1b[1m\x1b[31m❌ Unknown command:\x1b[0m "${command}"`);
+    console.error(`\x1b[1m\x1b[31mUnknown command:\x1b[0m "${command}"`);
     printHelp();
     process.exit(1);
   }
