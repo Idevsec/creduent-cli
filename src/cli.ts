@@ -1,9 +1,40 @@
 #!/usr/bin/env node
 
-import { promises as fs, existsSync } from "fs";
+/*
+ * Copyright 2026 IDevSec
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { promises as fs, existsSync, readFileSync } from "fs";
 import readline from "readline";
+import { resolve, dirname } from "path";
 import { resolveAgent, verifyAgent, registerAgent, CreduentError, AgentNotFoundError } from "./client.js";
 import { generateKeys, signDocument } from "./crypto.js";
+
+// Read version dynamically — works in both ESM and CJS builds
+function getCliVersion(): string {
+  try {
+    // Walk up from the compiled CLI file location to find package.json
+    const cliDir = dirname(resolve(process.argv[1] ?? ""));
+    const pkgPath = resolve(cliDir, "../../package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+    return pkg.version ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+const CLI_VERSION = getCliVersion();
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -11,7 +42,7 @@ const command = args[0];
 function printHelp() {
   console.log(`
 \x1b[1m\x1b[36m◆ CREDUENT CLI\x1b[0m \x1b[90m—\x1b[0m \x1b[1m\x1b[37mAI Agent Identity & Trust Protocol\x1b[0m
-\x1b[90mVersion 0.1.0 | Developed by IDevSec
+\x1b[90mVersion ${CLI_VERSION} | Developed by IDevSec
 
 NPM   : https://www.npmjs.com/package/@idevsec/creduent-cli
 GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
@@ -24,9 +55,13 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1mresolve\x1b[0m \x1b[33m<agent-uri>\x1b[0m         \x1b[90mResolve an agent's attestation record\x1b[0m
   \x1b[1mverify\x1b[0m \x1b[33m<agent-uri>\x1b[0m          \x1b[90mVerify if an agent is trusted/verified\x1b[0m
   \x1b[1mregister\x1b[0m \x1b[35m[options]\x1b[0m         \x1b[90mRegister a new agent identity with the registry\x1b[0m
+  \x1b[1mrenew\x1b[0m \x1b[35m[options]\x1b[0m            \x1b[90mRenew agent attestation validity period using private key\x1b[0m
+  \x1b[1mwebhook register\x1b[0m \x1b[35m[opts]\x1b[0m     \x1b[90mRegister a webhook URL to receive protocol updates\x1b[0m
+  \x1b[1mwebhook query\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mQuery registered webhook URL for an agent\x1b[0m
+  \x1b[1mdiscover\x1b[0m \x1b[33m<uri>\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mDiscover an agent's capabilities (supports authentication)\x1b[0m
 
 \x1b[1m\x1b[35mGLOBAL OPTIONS:\x1b[0m
-  \x1b[1m--base-url\x1b[0m \x1b[33m<url>\x1b[0m          \x1b[90mUse a custom registry URL (default: https://registry.idevsec.com)\x1b[0m
+  \x1b[1m--base-url\x1b[0m \x1b[33m<url>\x1b[0m          \x1b[90mUse a custom registry URL (default: https://creduent.idevsec.com)\x1b[0m
   \x1b[1m--help\x1b[0m                    \x1b[90mShow this help message\x1b[0m
 
 \x1b[1m\x1b[35mINIT OPTIONS:\x1b[0m
@@ -44,6 +79,20 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1m--json-url\x1b[0m \x1b[33m<url>\x1b[0m         \x1b[90mURL serving the agent.json metadata file\x1b[0m
   \x1b[1m--meta\x1b[0m \x1b[33mkey=value\x1b[0m          \x1b[90mCustom metadata key-value pair (can be used multiple times)\x1b[0m
 
+\x1b[1m\x1b[35mRENEW OPTIONS:\x1b[0m
+  \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI to renew\x1b[0m
+  \x1b[1m--days\x1b[0m \x1b[33m<number>\x1b[0m           \x1b[90mDays from now for new expiry (default: 365)\x1b[0m
+  \x1b[1m--key\x1b[0m \x1b[33m<path>\x1b[0m              \x1b[90mPath to private key PEM (default: private_key.pem)\x1b[0m
+
+\x1b[1m\x1b[35mWEBHOOK OPTIONS:\x1b[0m
+  \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI\x1b[0m
+  \x1b[1m--url\x1b[0m \x1b[33m<webhook-url>\x1b[0m       \x1b[90mWebhook target URL (only for webhook register)\x1b[0m
+  \x1b[1m--key\x1b[0m \x1b[33m<path>\x1b[0m              \x1b[90mPath to private key PEM (default: private_key.pem)\x1b[0m
+
+\x1b[1m\x1b[35mDISCOVER OPTIONS:\x1b[0m
+  \x1b[1m--as\x1b[0m \x1b[33m<my-agent-uri>\x1b[0m       \x1b[90mYour agent's URI for authenticated discovery\x1b[0m
+  \x1b[1m--key\x1b[0m \x1b[33m<path>\x1b[0m              \x1b[90mPath to private key PEM (default: private_key.pem)\x1b[0m
+
 \x1b[1m\x1b[33mEXAMPLES:\x1b[0m
   \x1b[90m# Initialize a new agent identity interactively\x1b[0m
   $ \x1b[1mcreduent init\x1b[0m
@@ -59,10 +108,19 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
 
   \x1b[90m# Register an agent\x1b[0m
   $ \x1b[1mcreduent register\x1b[0m --agent agent://myorg/mybot --domain myorg.com --json-url https://myorg.com/agent.json
+
+  \x1b[90m# Renew agent attestation validity\x1b[0m
+  $ \x1b[1mcreduent renew\x1b[0m --agent agent://myorg/mybot --days 180
+
+  \x1b[90m# Register a webhook for agent events\x1b[0m
+  $ \x1b[1mcreduent webhook register\x1b[0m --agent agent://myorg/mybot --url https://example.com/hooks/attestation
+
+  \x1b[90m# Discover capabilities of an agent\x1b[0m
+  $ \x1b[1mcreduent discover\x1b[0m agent://creduent/reconbot
   `);
 }
 
-function parseFlags(args: string[]) {
+export function parseFlags(args: string[]) {
   const flags: Record<string, string> = {};
   const meta: Record<string, string> = {};
   for (let i = 0; i < args.length; i++) {
@@ -197,7 +255,7 @@ async function main() {
     const signedDoc = signDocument(draftDoc, privateKeyPem);
 
     try {
-      await fs.writeFile(privateKeyPath, privateKeyPem, "utf-8");
+      await fs.writeFile(privateKeyPath, privateKeyPem, { encoding: "utf-8", mode: 0o600 });
       console.log(`\x1b[1m\x1b[32m✅ Private key saved to:\x1b[0m ${privateKeyPath} \x1b[90m(KEEP THIS SECRET!)\x1b[0m`);
 
       await fs.writeFile(agentJsonPath, JSON.stringify(signedDoc, null, 2), "utf-8");
@@ -300,13 +358,186 @@ async function main() {
     }
   }
 
-  // ── unknown ──────────────────────────────────────────────────────────────
-  else {
+
+  // ── renew ────────────────────────────────────────────────────────────────
+  else if (command === "renew") {
+    const agent = flags["agent"];
+    const daysStr = flags["days"];
+    const keyPath = flags["key"] || "./private_key.pem";
+
+    if (!agent) {
+      console.error("\x1b[1m\x1b[31m❌ Error: Please provide an agent URI via --agent.\x1b[0m\n\x1b[90m   Usage: creduent renew --agent <uri> [--days <number>] [--key <path>]\x1b[0m");
+      process.exit(1);
+    }
+
+    const days = daysStr ? parseInt(daysStr, 10) : 365;
+    if (isNaN(days)) {
+      console.error("\x1b[1m\x1b[31m❌ Error: Invalid value for --days.\x1b[0m");
+      process.exit(1);
+    }
+
+    try {
+      const { loadPrivateKey, signPayload } = await import("./crypto.js");
+      const privateKeyPem = loadPrivateKey(keyPath);
+
+      // Calculates new_expires_at as now + days in UTC ISO format (no ms)
+      const newExpiresAtDate = new Date();
+      newExpiresAtDate.setDate(newExpiresAtDate.getDate() + days);
+      const new_expires_at = newExpiresAtDate.toISOString().replace(/\.\d{3}/, "");
+
+      const payload = {
+        agent_id: agent,
+        new_expires_at
+      };
+
+      console.log(`\n\x1b[36m✍️  Signing renewal request for agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+      const signature = signPayload(payload, privateKeyPem);
+
+      console.log(`\x1b[36m🔄 Sending renewal request to registry...\x1b[0m`);
+      const record = await (await import("./client.js")).renewAgent(
+        { agent_id: agent, new_expires_at, signature },
+        clientOptions
+      );
+
+      console.log("\x1b[1m\x1b[32m✅ Agent renewed successfully!\x1b[0m");
+      printRecord(record);
+    } catch (err: any) {
+      console.error(`\x1b[1m\x1b[31m❌ Error:\x1b[0m ${err.message || err}`);
+      process.exit(1);
+    }
+  }
+
+  // ── webhook ──────────────────────────────────────────────────────────────
+  else if (command === "webhook") {
+    const subCommand = args[1];
+    if (subCommand === "register") {
+      const agent = flags["agent"];
+      const url = flags["url"];
+      const keyPath = flags["key"] || "./private_key.pem";
+
+      if (!agent || !url) {
+        console.error("\x1b[1m\x1b[31m❌ Error: Missing required flags.\x1b[0m");
+        console.error("\x1b[90m   Usage: creduent webhook register --agent <uri> --url <webhook-url> [--key <path>]\x1b[0m");
+        process.exit(1);
+      }
+
+      try {
+        const { loadPrivateKey, signPayload } = await import("./crypto.js");
+        const privateKeyPem = loadPrivateKey(keyPath);
+
+        const payload = {
+          agent_id: agent,
+          webhook_url: url
+        };
+
+        console.log(`\n\x1b[36m✍️  Signing webhook registration for agent:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+        const signature = signPayload(payload, privateKeyPem);
+
+        console.log(`\x1b[36m🔄 Registering webhook URL: ${url}...\x1b[0m`);
+        const result = await (await import("./client.js")).registerWebhook(
+          { agent_id: agent, webhook_url: url, signature },
+          clientOptions
+        );
+        console.log("\x1b[1m\x1b[32m✅ Webhook registered successfully!\x1b[0m");
+        console.log(`\x1b[90mAgent ID:\x1b[0m    \x1b[36m${result.agent_id}\x1b[0m`);
+        console.log(`\x1b[90mWebhook URL:\x1b[0m \x1b[4m${result.webhook_url}\x1b[0m\n`);
+      } catch (err: any) {
+        console.error(`\x1b[1m\x1b[31m❌ Error:\x1b[0m ${err.message || err}`);
+        process.exit(1);
+      }
+    } else if (subCommand === "query") {
+      const agent = flags["agent"];
+      if (!agent) {
+        console.error("\x1b[1m\x1b[31m❌ Error: Please provide an agent URI via --agent.\x1b[0m\n\x1b[90m   Usage: creduent webhook query --agent <uri>\x1b[0m");
+        process.exit(1);
+      }
+
+      try {
+        console.log(`\n\x1b[36m🔍 Querying webhook for:\x1b[0m \x1b[1m${agent}\x1b[0m`);
+        const result = await (await import("./client.js")).queryWebhook(agent, clientOptions);
+        console.log(`\x1b[90mAgent ID:\x1b[0m    \x1b[36m${result.agent_id}\x1b[0m`);
+        console.log(`\x1b[90mWebhook URL:\x1b[0m \x1b[4m${result.webhook_url}\x1b[0m\n`);
+      } catch (err: any) {
+        console.error(`\x1b[1m\x1b[31m❌ Error:\x1b[0m ${err.message || err}`);
+        process.exit(1);
+      }
+    } else {
+      console.error("\x1b[1m\x1b[31m❌ Error: Invalid webhook sub-command. Must be 'register' or 'query'.\x1b[0m");
+      console.error("\x1b[90m   Usage:\x1b[0m\n     creduent webhook register --agent <uri> --url <url>\n     creduent webhook query --agent <uri>");
+      process.exit(1);
+    }
+  }
+
+  // ── discover ─────────────────────────────────────────────────────────────
+  else if (command === "discover") {
+    const targetUri = args[1];
+    const asAgent = flags["as"];
+    const keyPath = flags["key"] || "./private_key.pem";
+
+    if (!targetUri) {
+      console.error("\x1b[1m\x1b[31m❌ Error: Please provide a target agent URI to discover.\x1b[0m\n\x1b[90m   Usage: creduent discover <target-uri> [--as <my-agent-uri>] [--key <path>]\x1b[0m");
+      process.exit(1);
+    }
+
+    try {
+      let myAgentId: string | undefined;
+      let privateKeyPem: string | undefined;
+
+      if (asAgent) {
+        const { loadPrivateKey } = await import("./crypto.js");
+        myAgentId = asAgent;
+        privateKeyPem = loadPrivateKey(keyPath);
+        console.log(`\n\x1b[36m🔍 Discovering (Authenticated as ${asAgent}):\x1b[0m \x1b[1m${targetUri}\x1b[0m`);
+      } else {
+        console.log(`\n\x1b[36m🔍 Discovering (Public):\x1b[0m \x1b[1m${targetUri}\x1b[0m`);
+      }
+
+      const result = await (await import("./client.js")).discoverAgent(
+        targetUri,
+        myAgentId,
+        privateKeyPem,
+        clientOptions
+      );
+
+      if (result.error && !result.capabilities) {
+        console.error(`\x1b[1m\x1b[31m❌ Discovery failed:\x1b[0m ${result.error}`);
+        process.exit(1);
+      }
+
+      console.log(`\x1b[1m\x1b[32m┌── DISCOVERY RESULTS ───────────────────────────────────────────────────\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mTarget Agent\x1b[0m  : \x1b[36m${result.target_agent_id}\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mEndpoint\x1b[0m      : \x1b[4m${result.endpoint || "N/A"}\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mAuthenticated\x1b[0m : ${result.authenticated ? "\x1b[1m\x1b[32mYES (Private Capabilities Included)\x1b[0m" : "\x1b[1m\x1b[33mNO (Public Capabilities Only)\x1b[0m"}`);
+      if (result.error) {
+        console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mWarning/Error\x1b[0m : \x1b[31m${result.error}\x1b[0m`);
+      }
+      console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mCapabilities\x1b[0m  :`);
+      if (result.capabilities && result.capabilities.length > 0) {
+        for (const cap of result.capabilities) {
+          const capStr = typeof cap === "object" ? JSON.stringify(cap) : cap;
+          console.log(`\x1b[1m\x1b[32m│\x1b[0m    - \x1b[35m${capStr}\x1b[0m`);
+        }
+      } else {
+        console.log(`\x1b[1m\x1b[32m│\x1b[0m    (None listed)`);
+      }
+      console.log(`\x1b[1m\x1b[32m└────────────────────────────────────────────────────────────────────────\x1b[0m\n`);
+    } catch (err: any) {
+      console.error(`\x1b[1m\x1b[31m❌ Unexpected error:\x1b[0m ${err.message || err}`);
+      process.exit(1);
+    }
+  } else {
     console.error(`\x1b[1m\x1b[31m❌ Unknown command:\x1b[0m "${command}"`);
     printHelp();
     process.exit(1);
   }
 }
 
-main();
+const isEntrypoint = process.argv[1] && (
+  process.argv[1].endsWith("cli.js") || 
+  process.argv[1].endsWith("cli.ts") ||
+  process.argv[1].endsWith("creduent")
+);
+if (isEntrypoint) {
+  main();
+}
 

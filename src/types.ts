@@ -21,3 +21,31 @@ export interface ClientOptions {
   baseUrl?: string;
   headers?: Record<string, string>;
 }
+
+export interface RenewPayload {
+  agent_id: string;
+  new_expires_at: string;
+  signature: string;
+}
+
+export interface RenewResult extends AgentRecord {}
+
+export interface WebhookPayload {
+  agent_id: string;
+  webhook_url: string;
+  signature: string;
+}
+
+export interface WebhookResult {
+  agent_id: string;
+  webhook_url: string;
+}
+
+export interface DiscoveryResult {
+  target_agent_id: string;
+  endpoint?: string;
+  capabilities?: string[];
+  authenticated: boolean;
+  error?: string;
+}
+

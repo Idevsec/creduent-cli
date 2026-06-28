@@ -1,6 +1,15 @@
-import { AgentRecord, RegisterPayload, ClientOptions } from "./types.js";
+import {
+  AgentRecord,
+  RegisterPayload,
+  ClientOptions,
+  RenewPayload,
+  RenewResult,
+  WebhookPayload,
+  WebhookResult,
+  DiscoveryResult
+} from "./types.js";
 
-const DEFAULT_BASE_URL = "https://registry.idevsec.com";
+const DEFAULT_BASE_URL = "https://creduent.idevsec.com";
 
 export class CreduentError extends Error {
   constructor(message: string, public statusCode?: number, public responseText?: string) {
@@ -19,7 +28,7 @@ export class AgentNotFoundError extends CreduentError {
 /**
  * Normalizes an agent URI to ensure it follows the canonical 'agent://<domain>/<path>' format.
  */
-function normalizeAgentUri(uri: string): string {
+export function normalizeAgentUri(uri: string): string {
   let cleaned = uri.trim();
   if (cleaned.startsWith("agent:/") && !cleaned.startsWith("agent://")) {
     cleaned = "agent://" + cleaned.substring(7);
@@ -55,10 +64,17 @@ async function request<T>(
   }
 
   let response: Response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
   try {
-    response = await fetch(url, fetchOptions);
+    response = await fetch(url, { ...fetchOptions, signal: controller.signal });
   } catch (error: any) {
+    if (error.name === "AbortError") {
+      throw new CreduentError("Registry request timed out after 10 seconds.");
+    }
     throw new CreduentError(`Failed to connect to the Creduent Registry: ${error.message}`);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (response.status === 404) {
@@ -92,12 +108,12 @@ export async function resolveAgent(uri: string, options?: ClientOptions): Promis
   const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
   const normalizedUri = normalizeAgentUri(uri);
 
-  // Construct the URL: e.g. https://registry.idevsec.com/agent://creduent/reconbot
+  // Construct the URL: e.g. https://creduent.idevsec.com/agent://creduent/reconbot
   const url = `${baseUrl}/${normalizedUri}`;
   return request<AgentRecord>(url, "GET", undefined, options);
 }
 
-import { verify, VerifyResult } from "@idevsec/creduent";
+import { verify, VerifyResult, discoverAgent as sdkDiscover } from "@idevsec/creduent";
 
 /**
  * Verifies an AI agent identity natively using Ed25519 Web Crypto signatures.
@@ -144,4 +160,72 @@ export async function registerAgent(payload: RegisterPayload, options?: ClientOp
   const url = `${baseUrl}/registry/register`;
   return request<AgentRecord>(url, "POST", normalizedPayload, options);
 }
+
+/**
+ * Renews an agent's cryptographic attestation.
+ */
+export async function renewAgent(payload: RenewPayload, options?: ClientOptions): Promise<RenewResult> {
+  const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
+
+  const normalizedPayload = {
+    ...payload,
+    agent_id: normalizeAgentUri(payload.agent_id),
+  };
+
+  const url = `${baseUrl}/registry/renew`;
+  return request<RenewResult>(url, "POST", normalizedPayload, options);
+}
+
+/**
+ * Registers a webhook URL for an agent.
+ */
+export async function registerWebhook(payload: WebhookPayload, options?: ClientOptions): Promise<WebhookResult> {
+  const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
+
+  const normalizedPayload = {
+    ...payload,
+    agent_id: normalizeAgentUri(payload.agent_id),
+  };
+
+  const url = `${baseUrl}/registry/webhook/register`;
+  return request<WebhookResult>(url, "POST", normalizedPayload, options);
+}
+
+/**
+ * Queries the webhook URL registered for an agent.
+ */
+export async function queryWebhook(agentId: string, options?: ClientOptions): Promise<WebhookResult> {
+  const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
+  const normalizedAgentId = normalizeAgentUri(agentId);
+
+  const url = `${baseUrl}/registry/webhook/${encodeURIComponent(normalizedAgentId)}`;
+  return request<WebhookResult>(url, "GET", undefined, options);
+}
+
+/**
+ * Discovers an agent's capabilities.
+ */
+export async function discoverAgent(
+  targetUri: string,
+  myAgentId?: string,
+  privateKeyPem?: string,
+  options?: ClientOptions
+): Promise<DiscoveryResult> {
+  const originalEnv = process.env.CREDUENT_REGISTRY_URL;
+  if (options?.baseUrl) {
+    process.env.CREDUENT_REGISTRY_URL = options.baseUrl;
+  }
+
+  try {
+    const result = await sdkDiscover(targetUri, myAgentId, privateKeyPem, options);
+    return result;
+  } finally {
+    if (originalEnv !== undefined) {
+      process.env.CREDUENT_REGISTRY_URL = originalEnv;
+    } else {
+      delete process.env.CREDUENT_REGISTRY_URL;
+    }
+  }
+}
+
 

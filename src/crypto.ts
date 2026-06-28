@@ -59,3 +59,28 @@ export function signDocument(draft: Record<string, any>, privateKeyPem: string):
 
   return doc;
 }
+
+import { readFileSync } from "fs";
+
+/**
+ * Loads a private key from the filesystem.
+ */
+export function loadPrivateKey(keyPath: string): string {
+  try {
+    return readFileSync(keyPath, "utf-8");
+  } catch (err: any) {
+    throw new Error(`Failed to load private key from '${keyPath}': ${err.message}`);
+  }
+}
+
+/**
+ * Signs a JCS payload with the private key and returns base64 signature.
+ */
+export function signPayload(payloadObj: object, privateKeyPem: string): string {
+  const canonicalStr = canonicalize(payloadObj);
+  const canonicalBytes = Buffer.from(canonicalStr, "utf-8");
+  const privateKeyObj = createPrivateKey(privateKeyPem);
+  const signatureBytes = sign(null, canonicalBytes, privateKeyObj);
+  return signatureBytes.toString("base64");
+}
+

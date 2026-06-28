@@ -90,4 +90,9 @@ Thumbs.db
 CLAUDE.md
 AGENTS.md
 
+# Test build outputs and locally generated agent JSON
+dist-test/
+agent.json
+
+
 
