@@ -59,7 +59,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@idevsec/creduent": "^2.0.3"
+    "@idevsec/creduent": "^2.0.3",
+    "@idevsec/creduent-cli": "^2.0.4"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
