@@ -1,9 +1,9 @@
 ---
 name: Feature request
 about: Propose a new command or capability for Creduent CLI
-title: '[FEATURE] '
+title: "[FEATURE] "
 labels: enhancement
-assignees: ''
+assignees: ""
 ---
 
 **Is your feature request related to a problem? Please describe.**

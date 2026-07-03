@@ -54,6 +54,7 @@ creduent init \
 ```
 
 **Example Output:**
+
 ```text
 Generating Ed25519 key pair...
 Signing agent.json metadata...
@@ -81,6 +82,7 @@ creduent verify agent://creduent/reconbot
 ```
 
 **Example Output (verified):**
+
 ```text
 Cryptographically VERIFIED!
 Agent ID:     agent://creduent/reconbot
@@ -89,6 +91,7 @@ Capabilities: verify, resolve, attest
 ```
 
 **Example Output (failed):**
+
 ```text
 Verification failed: Signature verification failed
 ```
@@ -104,6 +107,7 @@ creduent resolve agent://creduent/reconbot
 ```
 
 **Example Output:**
+
 ```text
 Resolving: agent://creduent/reconbot
 
@@ -135,12 +139,13 @@ creduent register \
 
 ## Global Options
 
-| Option | Description |
-| :--- | :--- |
+| Option             | Description                                                                                                 |
+| :----------------- | :---------------------------------------------------------------------------------------------------------- |
 | `--base-url <url>` | Override the default public registry (`https://creduent.idevsec.com`) to query a private or local registry. |
-| `--help` | Show the help menu listing all commands and flags. |
+| `--help`           | Show the help menu listing all commands and flags.                                                          |
 
 **Example using a custom registry:**
+
 ```bash
 creduent verify agent://myorg/mybot --base-url http://localhost:8000
 ```
@@ -165,6 +170,7 @@ This means verification works entirely offline once the document is fetched, and
 The Creduent CLI contains unit tests checking argument flag parsing, crypto operations, and client routines. Tests are built on top of Node.js's native test runner.
 
 To compile and execute the test suites:
+
 ```bash
 npm run test
 ```

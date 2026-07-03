@@ -1,68 +1,68 @@
 {
-  "name": "@idevsec/creduent-cli",
-  "version": "2.0.6",
-  "type": "module",
-  "description": "Official CLI for the Creduent Protocol — resolve, verify, and register AI agent identities from the terminal. Open standard for cryptographic AI agent identity (Ed25519, DNS, attestation).",
-  "main": "./dist/esm/index.js",
-  "bin": {
-    "creduent": "./dist/esm/cli.js"
-  },
-  "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      }
+    "name": "@idevsec/creduent-cli",
+    "version": "2.0.6",
+    "type": "module",
+    "description": "Official CLI for the Creduent Protocol — resolve, verify, and register AI agent identities from the terminal. Open standard for cryptographic AI agent identity (Ed25519, DNS, attestation).",
+    "main": "./dist/esm/index.js",
+    "bin": {
+        "creduent": "./dist/esm/cli.js"
+    },
+    "exports": {
+        ".": {
+            "require": {
+                "types": "./dist/cjs/index.d.ts",
+                "default": "./dist/cjs/index.js"
+            },
+            "import": {
+                "types": "./dist/esm/index.d.ts",
+                "default": "./dist/esm/index.js"
+            }
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:esm": "tsc",
+        "build:cjs": "tsc -p tsconfig.cjs.json",
+        "build": "npm run build:esm && npm run build:cjs",
+        "prepublishOnly": "npm run build",
+        "test": "tsc -p test/tsconfig.json && node --test dist-test/test/client.test.js dist-test/test/crypto.test.js dist-test/test/utils.test.js"
+    },
+    "keywords": [
+        "creduent",
+        "cli",
+        "ai-agent",
+        "agent-identity",
+        "agent-trust",
+        "agent-verification",
+        "ed25519",
+        "cryptographic-signing",
+        "attestation",
+        "agent-json",
+        "open-standard",
+        "mcp",
+        "model-context-protocol",
+        "dns-verification",
+        "autonomous-agent",
+        "ai-security",
+        "idevsec"
+    ],
+    "author": "IDevSec",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/idevsec/creduent-cli"
+    },
+    "homepage": "https://idevsec.com/creduent",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "dependencies": {
+        "@idevsec/creduent": "^2.0.3"
+    },
+    "devDependencies": {
+        "@types/node": "^25.9.1",
+        "typescript": "^5.3.3"
     }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build:esm": "tsc",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build": "npm run build:esm && npm run build:cjs",
-    "prepublishOnly": "npm run build",
-    "test": "tsc -p test/tsconfig.json && node --test dist-test/test/client.test.js dist-test/test/crypto.test.js dist-test/test/utils.test.js"
-  },
-  "keywords": [
-    "creduent",
-    "cli",
-    "ai-agent",
-    "agent-identity",
-    "agent-trust",
-    "agent-verification",
-    "ed25519",
-    "cryptographic-signing",
-    "attestation",
-    "agent-json",
-    "open-standard",
-    "mcp",
-    "model-context-protocol",
-    "dns-verification",
-    "autonomous-agent",
-    "ai-security",
-    "idevsec"
-  ],
-  "author": "IDevSec",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/idevsec/creduent-cli"
-  },
-  "homepage": "https://idevsec.com/creduent",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "@idevsec/creduent": "^2.0.3"
-  },
-  "devDependencies": {
-    "@types/node": "^25.9.1",
-    "typescript": "^5.3.3"
-  }
 }

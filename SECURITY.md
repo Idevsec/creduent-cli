@@ -18,8 +18,9 @@ Only the latest release of Creduent CLI is actively supported with security patc
 ## Security Guarantees & Verification Integrity
 
 Creduent CLI implements strict safety and cryptographic validation measures:
-*   **Decentralized Verification:** The `verify` command performs signature checking locally on your machine using built-in, secure system libraries, rather than trusting a remote server's assertion.
-*   **Safe Private Keys handling:** When invoking `creduent init`, the generated private key is saved with secure local file permissions and automatically recommended for exclusion from version control.
+
+- **Decentralized Verification:** The `verify` command performs signature checking locally on your machine using built-in, secure system libraries, rather than trusting a remote server's assertion.
+- **Safe Private Keys handling:** When invoking `creduent init`, the generated private key is saved with secure local file permissions and automatically recommended for exclusion from version control.
 
 ---
 

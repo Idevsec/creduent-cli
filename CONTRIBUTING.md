@@ -7,42 +7,47 @@ Thank you for your interest in contributing to the Creduent CLI! This guide help
 ## Development Setup
 
 1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/idevsec/creduent-cli.git
-   cd creduent-cli
-   ```
+
+    ```bash
+    git clone https://github.com/idevsec/creduent-cli.git
+    cd creduent-cli
+    ```
 
 2. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 3. **Run the Compiler in Watch Mode:**
    To automatically compile TypeScript changes during development:
-   ```bash
-   npm run build -- --watch
-   ```
+
+    ```bash
+    npm run build -- --watch
+    ```
 
 4. **Verify Installation Locally:**
    You can run the compiled CLI locally using Node:
-   ```bash
-   node dist/cli.js --help
-   ```
+
+    ```bash
+    node dist/cli.js --help
+    ```
 
 5. **Run the Test Suite:**
    Verify your setup by running the native Node.js tests:
-   ```bash
-   npm run test
-   ```
+    ```bash
+    npm run test
+    ```
 
 ---
 
 ## Code Guidelines & Robustness Guarantees
 
 Please ensure all contributions align with our core protocol security guarantees:
-* **Ed25519 Checking:** Maintain local decentralized signature validation using `globalThis.crypto.subtle` (Web Crypto API) in core verify commands.
-* **Canonicalization:** Ensure all payloads are serialized using RFC 8785 JSON Canonicalization Scheme (JCS) before signing or verifying.
-* **Error Resilience:** Catch and format HTTP and filesystem exceptions cleanly, failing closed on signature mismatches.
+
+- **Ed25519 Checking:** Maintain local decentralized signature validation using `globalThis.crypto.subtle` (Web Crypto API) in core verify commands.
+- **Canonicalization:** Ensure all payloads are serialized using RFC 8785 JSON Canonicalization Scheme (JCS) before signing or verifying.
+- **Error Resilience:** Catch and format HTTP and filesystem exceptions cleanly, failing closed on signature mismatches.
 
 ---
 
@@ -52,10 +57,10 @@ To keep the repository clean and manageable, please follow our branching convent
 
 ### Branch Naming Conventions
 
-* **Features:** Use prefix `feature/` (e.g., `feature/custom-resolver-support`) for new CLI commands or options.
-* **Bugfixes:** Use prefix `bugfix/` (e.g., `bugfix/crlf-signing-issue`) for fixing bugs or issues.
-* **Documentation:** Use prefix `docs/` (e.g., `docs/command-reference-update`) for changes to documentation or README files.
-* **Refactoring:** Use prefix `refactor/` (e.g., `refactor/typescript-migration`) for code refactors with no functional changes.
+- **Features:** Use prefix `feature/` (e.g., `feature/custom-resolver-support`) for new CLI commands or options.
+- **Bugfixes:** Use prefix `bugfix/` (e.g., `bugfix/crlf-signing-issue`) for fixing bugs or issues.
+- **Documentation:** Use prefix `docs/` (e.g., `docs/command-reference-update`) for changes to documentation or README files.
+- **Refactoring:** Use prefix `refactor/` (e.g., `refactor/typescript-migration`) for code refactors with no functional changes.
 
 ### Pull Request Process
 
