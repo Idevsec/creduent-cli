@@ -7,6 +7,9 @@
 
 The official command-line interface for the **[Creduent Protocol](https://idevsec.com/creduent)** — the open standard for cryptographic AI agent identity, Ed25519 signing, DNS ownership verification, and attestation registry.
 
+### What is Creduent?
+**Creduent** is an open application-layer protocol for cryptographic identity and trust verification of autonomous AI agents. Originated and stewarded by IDevSec, it provides a vendor-neutral standard to definitively verify who controls an AI agent, its authenticity, and its capabilities using Ed25519 cryptography and DNS records.
+
 The Creduent CLI allows developers, operators, and agent hosts to initialize agent identities, resolve attestation records, cryptographically verify agent trust status, and register new agents directly from the terminal.
 
 > **Protocol**: [idevsec.com/creduent](https://idevsec.com/creduent) | **Docs**: [idevsec.com/creduent/docs](https://idevsec.com/creduent/docs) | **Registry**: [creduent.idevsec.com](https://creduent.idevsec.com)
@@ -78,14 +81,14 @@ To publish and verify this identity:
 Downloads the agent identity document and validates the Ed25519 signature locally using the `@idevsec/creduent` SDK. No centralized trust — verification is fully decentralized.
 
 ```bash
-creduent verify agent://creduent/reconbot
+creduent verify agent://idevsec/steward
 ```
 
 **Example Output (verified):**
 
 ```text
 Cryptographically VERIFIED!
-Agent ID:     agent://creduent/reconbot
+Agent ID:     agent://idevsec/steward
 Owner:        IDevSec
 Capabilities: verify, resolve, attest
 ```
@@ -103,15 +106,15 @@ Verification failed: Signature verification failed
 Fetches and displays the complete cryptographic attestation record of a registered agent from the registry.
 
 ```bash
-creduent resolve agent://creduent/reconbot
+creduent resolve agent://idevsec/steward
 ```
 
 **Example Output:**
 
 ```text
-Resolving: agent://creduent/reconbot
+Resolving: agent://idevsec/steward
 
-  Agent ID   : agent://creduent/reconbot
+  Agent ID   : agent://idevsec/steward
   Issuer     : agent://creduent/registry
   Level      : trusted
   Domain     : creduent.idevsec.com

@@ -101,10 +101,10 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   $ \x1b[1mcreduent init\x1b[0m --agent agent://myorg/mybot --domain myorg.com -y
 
   \x1b[90m# Resolve an agent's record\x1b[0m
-  $ \x1b[1mcreduent resolve\x1b[0m agent://creduent/reconbot
+  $ \x1b[1mcreduent resolve\x1b[0m agent://idevsec/steward
 
   \x1b[90m# Verify agent trust level\x1b[0m
-  $ \x1b[1mcreduent verify\x1b[0m agent://creduent/reconbot
+  $ \x1b[1mcreduent verify\x1b[0m agent://idevsec/steward
 
   \x1b[90m# Register an agent\x1b[0m
   $ \x1b[1mcreduent register\x1b[0m --agent agent://myorg/mybot --domain myorg.com --json-url https://myorg.com/agent.json
@@ -116,7 +116,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   $ \x1b[1mcreduent webhook register\x1b[0m --agent agent://myorg/mybot --url https://example.com/hooks/attestation
 
   \x1b[90m# Discover capabilities of an agent\x1b[0m
-  $ \x1b[1mcreduent discover\x1b[0m agent://creduent/reconbot
+  $ \x1b[1mcreduent discover\x1b[0m agent://idevsec/steward
   `);
 }
 
