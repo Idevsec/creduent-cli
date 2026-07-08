@@ -40,6 +40,18 @@ export interface WebhookResult {
     webhook_url: string;
 }
 
+export interface RevokePayload {
+    agent_id: string;
+    signature: string;
+    reason?: string;
+}
+
+export interface RevokeResult {
+    status: string;
+    agent_id: string;
+    message?: string;
+}
+
 export interface DiscoveryResult {
     target_agent_id: string;
     endpoint?: string;

@@ -1,6 +1,6 @@
 {
     "name": "@idevsec/creduent-cli",
-    "version": "2.0.8",
+    "version": "2.0.9",
     "type": "module",
     "description": "Creduent is the open application-layer protocol for cryptographic identity and trust verification of autonomous AI agents using Ed25519 and DNS.",
     "main": "./dist/esm/index.js",
@@ -59,7 +59,7 @@
         "node": ">=18.0.0"
     },
     "dependencies": {
-        "@idevsec/creduent": "^2.0.3"
+        "@idevsec/creduent": "^2.0.5"
     },
     "devDependencies": {
         "@types/node": "^26.1.0",

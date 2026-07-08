@@ -19,8 +19,8 @@
 import { promises as fs, existsSync, readFileSync } from "fs";
 import readline from "readline";
 import { resolve, dirname } from "path";
-import { resolveAgent, verifyAgent, registerAgent, CreduentError, AgentNotFoundError } from "./client.js";
-import { generateKeys, signDocument } from "./crypto.js";
+import { resolveAgent, verifyAgent, registerAgent, revokeAgent, CreduentError, AgentNotFoundError } from "./client.js";
+import { generateKeys, signDocument, signPayload } from "./crypto.js";
 
 // Read version dynamically — works in both ESM and CJS builds
 function getCliVersion(): string {
@@ -59,6 +59,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1mwebhook register\x1b[0m \x1b[35m[opts]\x1b[0m     \x1b[90mRegister a webhook URL to receive protocol updates\x1b[0m
   \x1b[1mwebhook query\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mQuery registered webhook URL for an agent\x1b[0m
   \x1b[1mdiscover\x1b[0m \x1b[33m<uri>\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mDiscover an agent's capabilities (supports authentication)\x1b[0m
+  \x1b[1mrevoke\x1b[0m \x1b[35m[options]\x1b[0m            \x1b[90mPermanently revoke an agent's attestation (irreversible)\x1b[0m
 
 \x1b[1m\x1b[35mGLOBAL OPTIONS:\x1b[0m
   \x1b[1m--base-url\x1b[0m \x1b[33m<url>\x1b[0m          \x1b[90mUse a custom registry URL (default: https://creduent.idevsec.com)\x1b[0m
@@ -117,6 +118,12 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
 
   \x1b[90m# Discover capabilities of an agent\x1b[0m
   $ \x1b[1mcreduent discover\x1b[0m agent://idevsec/steward
+  \x1b[1m\x1b[35mREVOKE OPTIONS:\x1b[0m
+  \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI to permanently revoke\x1b[0m
+  \x1b[1m--key\x1b[0m \x1b[33m<path>\x1b[0m              \x1b[90mPath to private key PEM (default: private_key.pem)\x1b[0m
+  \x1b[1m--reason\x1b[0m \x1b[33m<text>\x1b[0m           \x1b[90mOptional reason for revocation\x1b[0m
+  \x1b[1m-y, --yes\x1b[0m                 \x1b[90mSkip confirmation prompt\x1b[0m
+
   `);
 }
 
@@ -558,6 +565,58 @@ async function main() {
             );
         } catch (err: any) {
             console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err.message || err}`);
+            process.exit(1);
+        }
+    } else if (command === "revoke") {
+        // ── revoke ───────────────────────────────────────────────────────────────
+        const agentUri = flags["agent"] || args[1];
+        if (!agentUri) {
+            console.error(`\x1b[1m\x1b[31mError:\x1b[0m --agent <uri> is required for revoke.`);
+            process.exit(1);
+        }
+
+        const keyPath = flags["key"] || "private_key.pem";
+        if (!existsSync(keyPath)) {
+            console.error(`\x1b[1m\x1b[31mError:\x1b[0m Private key not found at "${keyPath}".`);
+            process.exit(1);
+        }
+
+        const reason = flags["reason"] || undefined;
+        const skipConfirm = flags["yes"] === "true" || flags["y"] === "true";
+
+        if (!skipConfirm) {
+            console.warn(`\n\x1b[1m\x1b[31m⚠  WARNING: Revocation is PERMANENT and IRREVERSIBLE.\x1b[0m`);
+            console.warn(`\x1b[90m   Agent: ${agentUri}\x1b[0m\n`);
+            const confirm = await askQuestion(`Type the agent URI to confirm revocation: `);
+            if (confirm.trim() !== agentUri.trim()) {
+                console.error(`\x1b[1m\x1b[31mAborted.\x1b[0m URI did not match.`);
+                process.exit(1);
+            }
+        }
+
+        try {
+            const privateKeyPem = await fs.readFile(keyPath, "utf-8");
+            const revokePayloadObj = { agent_id: agentUri, ...(reason ? { reason } : {}) };
+            const signature = signPayload(revokePayloadObj, privateKeyPem);
+
+            const result = await revokeAgent(
+                { agent_id: agentUri, signature, reason },
+                clientOptions
+            );
+
+            console.log(`\n\x1b[1m\x1b[32m┌── REVOCATION RESULT ───────────────────────────────────────────────────\x1b[0m`);
+            console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mAgent ID\x1b[0m : \x1b[36m${result.agent_id}\x1b[0m`);
+            console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mStatus\x1b[0m   : \x1b[1m\x1b[31m${result.status?.toUpperCase()}\x1b[0m`);
+            if (result.message) {
+                console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mMessage\x1b[0m  : \x1b[90m${result.message}\x1b[0m`);
+            }
+            console.log(`\x1b[1m\x1b[32m└────────────────────────────────────────────────────────────────────────\x1b[0m\n`);
+        } catch (err: any) {
+            if (err instanceof CreduentError) {
+                console.error(`\x1b[1m\x1b[31mRevocation failed:\x1b[0m ${err.message}`);
+            } else {
+                console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err.message || err}`);
+            }
             process.exit(1);
         }
     } else {

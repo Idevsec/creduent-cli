@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.0.9] - 2026-07-08
+
+### Added
+
+- **`revoke` command:** Permanently revoke an agent's attestation via `creduent revoke --agent <uri> --key <pem>`. Signs a JCS-canonicalized payload with the agent's private key and calls `DELETE /registry/revoke/{agent_id}`. Includes a mandatory confirmation prompt (bypassed with `-y`) and an optional `--reason` flag.
+- **`revokeAgent()` client function:** Added `revokeAgent(payload, options)` to `client.ts` supporting the `DELETE` HTTP method on the registry revoke endpoint.
+
+### Changed
+
+- **Dependency bump:** Updated `@idevsec/creduent` from `^2.0.3` to `^2.0.5` to align with current SDK release.
+
 ## [2.0.8] - 2026-07-05
 
 ### Changed

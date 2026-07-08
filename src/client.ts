@@ -4,6 +4,8 @@ import {
     ClientOptions,
     RenewPayload,
     RenewResult,
+    RevokePayload,
+    RevokeResult,
     WebhookPayload,
     WebhookResult,
     DiscoveryResult,
@@ -47,7 +49,7 @@ export function normalizeAgentUri(uri: string): string {
 /**
  * Helper to build headers and fetch JSON from the registry securely.
  */
-async function request<T>(url: string, method: "GET" | "POST", body?: any, options?: ClientOptions): Promise<T> {
+async function request<T>(url: string, method: "GET" | "POST" | "DELETE", body?: any, options?: ClientOptions): Promise<T> {
     const headers = {
         "Content-Type": "application/json",
         ...options?.headers,
@@ -199,6 +201,25 @@ export async function queryWebhook(agentId: string, options?: ClientOptions): Pr
 
     const url = `${baseUrl}/registry/webhook/${encodeURIComponent(normalizedAgentId)}`;
     return request<WebhookResult>(url, "GET", undefined, options);
+}
+
+/**
+ * Permanently revokes an agent's attestation.
+ * Requires the agent's own private key signature over the revoke payload.
+ *
+ * @param payload The revoke payload including agent_id, signature, and optional reason
+ * @param options Configurable options including custom registry baseUrl
+ * @returns Revocation result
+ */
+export async function revokeAgent(payload: RevokePayload, options?: ClientOptions): Promise<RevokeResult> {
+    const baseUrl = options?.baseUrl?.replace(/\/$/, "") || DEFAULT_BASE_URL;
+    const normalizedAgentId = normalizeAgentUri(payload.agent_id);
+    const url = `${baseUrl}/registry/revoke/${encodeURIComponent(normalizedAgentId)}`;
+    const body = {
+        signature: payload.signature,
+        ...(payload.reason ? { reason: payload.reason } : {}),
+    };
+    return request<RevokeResult>(url, "DELETE", body, options);
 }
 
 /**
