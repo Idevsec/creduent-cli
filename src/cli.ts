@@ -21,6 +21,7 @@ import readline from "readline";
 import { resolve, dirname } from "path";
 import { resolveAgent, verifyAgent, registerAgent, revokeAgent, CreduentError, AgentNotFoundError } from "./client.js";
 import { generateKeys, signDocument, signPayload } from "./crypto.js";
+import { ClientOptions } from "./types.js";
 
 // Read version dynamically — works in both ESM and CJS builds
 function getCliVersion(): string {
@@ -82,7 +83,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
 
 \x1b[1m\x1b[35mRENEW OPTIONS:\x1b[0m
   \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI to renew\x1b[0m
-  \x1b[1m--days\x1b[0m \x1b[33m<number>\x1b[0m           \x1b[90mDays from now for new expiry (default: 365)\x1b[0m
+  \x1b[1m--days\x1b[0m \x1b[33m<number>\x1b[0m           \x1b[90mDays from now for new expiry (default: 30, server enforces a 30-day maximum)\x1b[0m
   \x1b[1m--key\x1b[0m \x1b[33m<path>\x1b[0m              \x1b[90mPath to private key PEM (default: private_key.pem)\x1b[0m
 
 \x1b[1m\x1b[35mWEBHOOK OPTIONS:\x1b[0m
@@ -199,7 +200,17 @@ async function main() {
     }
 
     const { flags, meta } = parseFlags(args.slice(1));
-    const clientOptions = flags["base-url"] ? { baseUrl: flags["base-url"] } : undefined;
+    const clientOptions: ClientOptions = {};
+    if (flags["base-url"]) {
+        clientOptions.baseUrl = flags["base-url"];
+    }
+    const adminKey = process.env.CREDUENT_ADMIN_KEY;
+    if (adminKey) {
+        clientOptions.headers = {
+            "CREDUENT-ADMIN-KEY": adminKey,
+        };
+    }
+
 
     // ── init ─────────────────────────────────────────────────────────────────
     if (command === "init") {
@@ -399,7 +410,7 @@ async function main() {
             process.exit(1);
         }
 
-        const days = daysStr ? parseInt(daysStr, 10) : 365;
+        const days = daysStr ? parseInt(daysStr, 10) : 30;
         if (isNaN(days)) {
             console.error("\x1b[1m\x1b[31mError: Invalid value for --days.\x1b[0m");
             process.exit(1);

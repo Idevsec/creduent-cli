@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.1.0] - 2026-07-10
+
+### Fixed
+- **`renew --days` default corrected**: The default value for `--days` was `365`, but the registry enforces a hard 30-day maximum on all renewals and silently caps any longer request. The default is now `30`, matching the actual server behaviour. The help text has been updated to read `(default: 30, server enforces a 30-day maximum)` so users are not surprised by the outcome.
+
 ## [2.0.9] - 2026-07-08
 
 ### Added

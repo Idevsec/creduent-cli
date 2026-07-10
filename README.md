@@ -5,11 +5,11 @@
 [![Node Compatibility](https://img.shields.io/node/v/@idevsec/creduent-cli.svg)](https://nodejs.org/)
 [![Downloads](https://img.shields.io/npm/dm/@idevsec/creduent-cli.svg)](https://www.npmjs.com/package/@idevsec/creduent-cli)
 
-The official command-line interface for the **[Creduent Protocol](https://idevsec.com/creduent)** — the open standard for cryptographic AI agent identity, Ed25519 signing, DNS ownership verification, and attestation registry.
+The official command-line interface for the **[Creduent Protocol](https://idevsec.com/creduent)**, the open standard for cryptographic AI agent identity, Ed25519 signing, DNS ownership verification, and attestation registry.
 
 ### What is Creduent?
 
-**Creduent** is an open application-layer protocol for cryptographic identity and trust verification of autonomous AI agents. Originated and stewarded by IDevSec, it provides a vendor-neutral standard to definitively verify who controls an AI agent, its authenticity, and its capabilities using Ed25519 cryptography and DNS records.
+**Creduent** is an open application-layer protocol for cryptographic identity and trust verification of autonomous AI agents, originally created by Kashish Kanojia and stewarded by IDevSec. The official Creduent CLI is developed and maintained by IDevSec.
 
 The Creduent CLI allows developers, operators, and agent hosts to initialize agent identities, resolve attestation records, cryptographically verify agent trust status, and register new agents directly from the terminal.
 
@@ -19,7 +19,7 @@ The Creduent CLI allows developers, operators, and agent hosts to initialize age
 
 ## Key Features
 
-- **Native Cryptographic Verification**: The `verify` command uses the `@idevsec/creduent` SDK to validate Ed25519 signatures locally — no centralized API trust required.
+- **Native Cryptographic Verification**: The `verify` command uses the `@idevsec/creduent` SDK to validate Ed25519 signatures locally. No centralized API trust is required.
 - **Command-Line Native**: Lightweight and fast terminal utility optimized for scripts, pipelines, and DevOps workflows.
 - **Full Registry Integration**: Seamlessly register new agents, resolve identity records, and perform cryptographic signature validation.
 - **Custom Registry Selection**: Target private or custom local registry instances using the `--base-url` parameter.
@@ -79,7 +79,7 @@ To publish and verify this identity:
 
 ### 2. Verify an Agent (Native Cryptographic)
 
-Downloads the agent identity document and validates the Ed25519 signature locally using the `@idevsec/creduent` SDK. No centralized trust — verification is fully decentralized.
+Downloads the agent identity document and validates the Ed25519 signature locally using the `@idevsec/creduent` SDK. No centralized trust, as verification is fully decentralized.
 
 ```bash
 creduent verify agent://idevsec/steward
@@ -140,6 +140,31 @@ creduent register \
 ```
 
 ---
+
+### 5. Renew Agent Attestation
+
+Extends your agent's attestation validity period. Requires the agent's private key to sign the renewal request. The registry enforces a 30-day maximum — any request beyond 30 days from now is capped server-side.
+
+```bash
+# Renew for 30 days (default)
+creduent renew --agent agent://myorg/mybot
+
+# Renew for a specific number of days (max 30 enforced by server)
+creduent renew \
+  --agent agent://myorg/mybot \
+  --days 14 \
+  --key ./private_key.pem
+```
+
+| Flag | Default | Description |
+| :--- | :--- | :--- |
+| `--agent` | required | Agent URI to renew |
+| `--days` | `30` | Days from now for new expiry (server max: 30) |
+| `--key` | `./private_key.pem` | Path to the agent's private key PEM file |
+
+---
+
+
 
 ## Global Options
 
