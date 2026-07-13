@@ -168,7 +168,6 @@ function printRecord(record: any) {
 \x1b[1m\x1b[32m│\x1b[0m  \x1b[1mTrust Level\x1b[0m : \x1b[1m\x1b[33m${record.level.toUpperCase()}\x1b[0m
 \x1b[1m\x1b[32m│\x1b[0m  \x1b[1mDomain\x1b[0m      : \x1b[4m${record.domain}\x1b[0m
 \x1b[1m\x1b[32m│\x1b[0m  \x1b[1mPublic Key\x1b[0m  : \x1b[35m${record.public_key}\x1b[0m
-\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mRegistered\x1b[0m  : ${record.registered_at || "N/A"}
 \x1b[1m\x1b[32m│\x1b[0m  \x1b[1mIssued At\x1b[0m   : ${record.issued_at}
 \x1b[1m\x1b[32m│\x1b[0m  \x1b[1mExpires At\x1b[0m  : ${record.expires_at}
 \x1b[1m\x1b[32m└────────────────────────────────────────────────────────────────────────\x1b[0m
