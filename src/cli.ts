@@ -349,8 +349,11 @@ async function main() {
             if (result.valid) {
                 console.log(`\x1b[1m\x1b[32mCryptographically VERIFIED!\x1b[0m`);
                 console.log(`\x1b[90mAgent ID:\x1b[0m     \x1b[36m${result.agent_id}\x1b[0m`);
-                console.log(`\x1b[90mOwner:\x1b[0m        ${result.document?.owner}`);
-                console.log(`\x1b[90mCapabilities:\x1b[0m ${result.document?.capabilities?.join(", ")}\n`);
+                const doc = result.document;
+                const owner = doc?.version === "2.0" ? doc.identity?.owner : doc?.owner;
+                const caps = doc?.version === "2.0" ? doc.policy?.capabilities : doc?.capabilities;
+                console.log(`\x1b[90mOwner:\x1b[0m        ${owner || "Unknown"}`);
+                console.log(`\x1b[90mCapabilities:\x1b[0m ${(caps || []).join(", ")}\n`);
             } else {
                 console.log(`\x1b[1m\x1b[31mVerification failed:\x1b[0m ${result.reason}\n`);
                 process.exit(1);
