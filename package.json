@@ -1,11 +1,11 @@
 {
     "name": "@idevsec/creduent-cli",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "type": "module",
     "description": "The official command-line interface for Creduent: the open standard and security protocol for cryptographic AI agent identity, authentication, and trust verification using Ed25519 and DNS.",
     "main": "./dist/esm/index.js",
     "bin": {
-        "creduent": "./dist/esm/cli.js"
+        "creduent": "dist/esm/cli.js"
     },
     "exports": {
         ".": {
@@ -54,7 +54,7 @@
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/idevsec/creduent-cli"
+        "url": "git+https://github.com/idevsec/creduent-cli.git"
     },
     "homepage": "https://idevsec.com/creduent",
     "engines": {

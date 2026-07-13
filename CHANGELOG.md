@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.1.1] - 2026-07-13
+
+### Fixed
+- **Support v2.0 Schema Resolution in `verify`**: Fixed an issue where the verify command failed to extract and print `Owner` and `Capabilities` values (showing `undefined`) when resolving newer `v2.0` schema files (where these values are nested inside `.identity` and `.policy` objects).
+- **Cleaned printRecord Layout**: Removed redundant `Registered: N/A` field output from the resolved attestation record table as the `Issued At` timestamp represents the actual registration date.
+- **`tsconfig` overrides**: Added `"ignoreDeprecations": "6.0"` to the CommonJS target configuration to suppress TypeScript's deprecation warnings for `moduleResolution: node`.
+- **package.json formatting**: Ran `npm pkg fix` to normalize repository URL formats and format binary targets.
+
 ## [2.1.0] - 2026-07-10
 
 ### Fixed
