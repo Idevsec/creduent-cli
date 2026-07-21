@@ -70,3 +70,17 @@ To keep the repository clean and manageable, please follow our branching convent
 4. Open a Pull Request (PR) against the `main` branch.
 5. Fill out the Pull Request template completely.
 6. Ensure any checks (CI workflows) pass and request review from maintainers.
+
+---
+
+## Project Roadmap & Wanted Features
+
+The Creduent CLI follows the global [Creduent Protocol Roadmap](https://github.com/idevsec/creduent/blob/main/ROADMAP.md). If you are looking for specific ways to contribute to the CLI, please refer to our active hotspots below:
+
+### CLI Active Hotspots
+* **Output Formatting (Phase 4):** Add `--format json` and `--format table` options to formatting-heavy commands like `creduent discover` and `creduent resolve` to make CLI output easily scriptable/readable.
+* **Shell Autocomplete (Phase 4):** Write autocomplete generator scripts for bash, zsh, and powershell.
+* **Interactive Sign Wizard (Phase 4):** Implement an interactive prompt utility for `creduent init` and signing flows to reduce parameter entry friction for beginners.
+
+Before opening a Pull Request for a new feature, please open an Issue to align on the specification and design.
+
