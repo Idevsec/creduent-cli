@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.1.2] - 2026-07-21
+
+### Added
+- **HMAC Webhook Verification command**: Added `verifyWebhookSignature` helper to `src/crypto.ts` and introduced `webhook verify` CLI sub-command. Supports `--secret`, `--sig`, `--ts`, `--payload` flags and `CREDUENT_WEBHOOK_SECRET` env variable to verify webhook payloads timing-safely.
+- **Contributing Guidelines**: Added Project Roadmap & Wanted Features hotspots section to `CONTRIBUTING.md`.
+
 ## [2.1.1] - 2026-07-13
 
 ### Fixed

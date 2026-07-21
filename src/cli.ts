@@ -59,6 +59,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1mrenew\x1b[0m \x1b[35m[options]\x1b[0m            \x1b[90mRenew agent attestation validity period using private key\x1b[0m
   \x1b[1mwebhook register\x1b[0m \x1b[35m[opts]\x1b[0m     \x1b[90mRegister a webhook URL to receive protocol updates\x1b[0m
   \x1b[1mwebhook query\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mQuery registered webhook URL for an agent\x1b[0m
+  \x1b[1mwebhook verify\x1b[0m \x1b[35m[opts]\x1b[0m       \x1b[90mVerify the HMAC-SHA256 signature of a received webhook payload\x1b[0m
   \x1b[1mdiscover\x1b[0m \x1b[33m<uri>\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mDiscover an agent's capabilities (supports authentication)\x1b[0m
   \x1b[1mrevoke\x1b[0m \x1b[35m[options]\x1b[0m            \x1b[90mPermanently revoke an agent's attestation (irreversible)\x1b[0m
 
@@ -90,6 +91,10 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI\x1b[0m
   \x1b[1m--url\x1b[0m \x1b[33m<webhook-url>\x1b[0m       \x1b[90mWebhook target URL (only for webhook register)\x1b[0m
   \x1b[1m--key\x1b[0m \x1b[33m<path>\x1b[0m              \x1b[90mPath to private key PEM (default: private_key.pem)\x1b[0m
+  \x1b[1m--secret\x1b[0m \x1b[33m<secret>\x1b[0m          \x1b[90mWebhook pre-shared secret (for webhook verify, or use CREDUENT_WEBHOOK_SECRET env)\x1b[0m
+  \x1b[1m--sig\x1b[0m \x1b[33m<hex>\x1b[0m               \x1b[90mHMAC hex signature from X-Creduent-Signature256 header (for webhook verify)\x1b[0m
+  \x1b[1m--ts\x1b[0m \x1b[33m<unix-ts>\x1b[0m           \x1b[90mTimestamp from X-Creduent-Timestamp header (for webhook verify)\x1b[0m
+  \x1b[1m--payload\x1b[0m \x1b[33m<json>\x1b[0m         \x1b[90mJSON string payload to verify (for webhook verify, or pipe via stdin)\x1b[0m
 
 \x1b[1m\x1b[35mDISCOVER OPTIONS:\x1b[0m
   \x1b[1m--as\x1b[0m \x1b[33m<my-agent-uri>\x1b[0m       \x1b[90mYour agent's URI for authenticated discovery\x1b[0m
@@ -505,10 +510,62 @@ async function main() {
                 console.error(`\x1b[1m\x1b[31mError:\x1b[0m ${err.message || err}`);
                 process.exit(1);
             }
+        } else if (subCommand === "verify") {
+            const secret = flags["secret"] || process.env.CREDUENT_WEBHOOK_SECRET;
+            const signatureHex = flags["sig"];
+            const timestamp = flags["ts"];
+            let payloadJson = flags["payload"];
+
+            if (!secret) {
+                console.error(
+                    "\x1b[1m\x1b[31mError: Missing webhook secret.\x1b[0m\n\x1b[90m   Provide via --secret <key> or CREDUENT_WEBHOOK_SECRET env var.\x1b[0m"
+                );
+                process.exit(1);
+            }
+            if (!signatureHex) {
+                console.error(
+                    "\x1b[1m\x1b[31mError: Missing --sig <X-Creduent-Signature256 header value>.\x1b[0m"
+                );
+                process.exit(1);
+            }
+            if (!timestamp) {
+                console.error(
+                    "\x1b[1m\x1b[31mError: Missing --ts <X-Creduent-Timestamp header value>.\x1b[0m"
+                );
+                process.exit(1);
+            }
+
+            // Read payload from --payload flag or stdin
+            if (!payloadJson) {
+                payloadJson = readFileSync("/dev/stdin", "utf-8").trim();
+            }
+
+            let payloadObj: object;
+            try {
+                payloadObj = JSON.parse(payloadJson);
+            } catch {
+                console.error("\x1b[1m\x1b[31mError: Failed to parse payload as JSON.\x1b[0m");
+                process.exit(1);
+            }
+
+            try {
+                const { verifyWebhookSignature } = await import("./crypto.js");
+                const valid = verifyWebhookSignature(secret, signatureHex, timestamp, payloadObj);
+                if (valid) {
+                    console.log("\x1b[1m\x1b[32m✓ Webhook signature is VALID.\x1b[0m");
+                    process.exit(0);
+                } else {
+                    console.error("\x1b[1m\x1b[31m✗ Webhook signature is INVALID.\x1b[0m");
+                    process.exit(1);
+                }
+            } catch (err: any) {
+                console.error(`\x1b[1m\x1b[31mError:\x1b[0m ${err.message || err}`);
+                process.exit(1);
+            }
         } else {
-            console.error("\x1b[1m\x1b[31mError: Invalid webhook sub-command. Must be 'register' or 'query'.\x1b[0m");
+            console.error("\x1b[1m\x1b[31mError: Invalid webhook sub-command. Must be 'register', 'query', or 'verify'.\x1b[0m");
             console.error(
-                "\x1b[90m   Usage:\x1b[0m\n     creduent webhook register --agent <uri> --url <url>\n     creduent webhook query --agent <uri>"
+                "\x1b[90m   Usage:\x1b[0m\n     creduent webhook register --agent <uri> --url <url>\n     creduent webhook query --agent <uri>\n     creduent webhook verify --secret <key> --sig <hex> --ts <ts> --payload <json>\x1b[0m"
             );
             process.exit(1);
         }

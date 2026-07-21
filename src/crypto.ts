@@ -1,4 +1,4 @@
-import { generateKeyPairSync, sign, createPrivateKey } from "crypto";
+import { generateKeyPairSync, sign, createPrivateKey, createHmac, timingSafeEqual } from "crypto";
 
 import { canonicalize } from "@idevsec/creduent";
 
@@ -83,3 +83,32 @@ export function signPayload(payloadObj: object, privateKeyPem: string): string {
     const signatureBytes = sign(null, canonicalBytes, privateKeyObj);
     return signatureBytes.toString("base64");
 }
+
+/**
+ * Verifies an HMAC-SHA256 signature for a Creduent webhook payload.
+ * Uses JCS canonicalization and timing-safe comparison.
+ *
+ * @param secret - The pre-shared webhook secret
+ * @param signatureHex - The hex signature from X-Creduent-Signature256
+ * @param timestamp - The timestamp from X-Creduent-Timestamp
+ * @param payload - The parsed webhook payload object
+ */
+export function verifyWebhookSignature(
+    secret: string,
+    signatureHex: string,
+    timestamp: string,
+    payload: object
+): boolean {
+    try {
+        const canonical = canonicalize(payload);
+        const signedData = `${timestamp}.${canonical}`;
+        const expectedSig = createHmac("sha256", secret).update(signedData).digest("hex");
+        const expectedBuf = Buffer.from(expectedSig, "utf-8");
+        const actualBuf = Buffer.from(signatureHex, "utf-8");
+        if (expectedBuf.length !== actualBuf.length) return false;
+        return timingSafeEqual(expectedBuf, actualBuf);
+    } catch {
+        return false;
+    }
+}
+
