@@ -211,7 +211,7 @@ npm run test
 - **Protocol overview**: [idevsec.com/creduent](https://idevsec.com/creduent)
 - **Technical reference**: [idevsec.com/creduent/docs](https://idevsec.com/creduent/docs)
 - **JS SDK**: [github.com/idevsec/creduent-js](https://github.com/idevsec/creduent-js)
-- **Standards documents**: [github.com/idevsec/creduent](https://github.com/idevsec/creduent) (CREDUENT-001 through CREDUENT-006)
+- **Standards documents**: [github.com/idevsec/creduent](https://github.com/idevsec/creduent) (CREDUENT-001 through CREDUENT-007)
 
 ---
 
