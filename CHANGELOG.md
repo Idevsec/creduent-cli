@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.1.3] - 2026-08-06
+
+### Changed
+- **SDK Dependency Alignment**: Updated SDK reference to align with `@idevsec/creduent` `v2.1.1-hotfix` featuring adapter boundary `ProvenanceGuard` and `LedgerChainVerifier`.
+
 ## [2.1.2] - 2026-07-21
 
 ### Added
