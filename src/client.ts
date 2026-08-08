@@ -131,9 +131,11 @@ export async function verifyAgent(uri: string, options?: ClientOptions): Promise
     }
 
     try {
-        const result = await verify(uri);
+        const useCache = options?.noCache !== true;
+        const result = await (verify as any)(uri, useCache);
         return result;
     } finally {
+
         if (originalEnv !== undefined) {
             process.env.CREDUENT_REGISTRY_URL = originalEnv;
         } else {
@@ -141,6 +143,7 @@ export async function verifyAgent(uri: string, options?: ClientOptions): Promise
         }
     }
 }
+
 
 /**
  * Registers an AI agent with the Creduent Attestation Registry.

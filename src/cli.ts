@@ -208,12 +208,16 @@ async function main() {
     if (flags["base-url"]) {
         clientOptions.baseUrl = flags["base-url"];
     }
+    if ("no-cache" in flags) {
+        clientOptions.noCache = true;
+    }
     const adminKey = process.env.CREDUENT_ADMIN_KEY;
     if (adminKey) {
         clientOptions.headers = {
             "CREDUENT-ADMIN-KEY": adminKey,
         };
     }
+
 
 
     // ── init ─────────────────────────────────────────────────────────────────

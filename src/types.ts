@@ -19,7 +19,9 @@ export interface RegisterPayload {
 export interface ClientOptions {
     baseUrl?: string;
     headers?: Record<string, string>;
+    noCache?: boolean;
 }
+
 
 export interface RenewPayload {
     agent_id: string;
