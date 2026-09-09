@@ -143,7 +143,7 @@ creduent register \
 
 ### 5. Renew Agent Attestation
 
-Extends your agent's attestation validity period. Requires the agent's private key to sign the renewal request. The registry enforces a 30-day maximum — any request beyond 30 days from now is capped server-side.
+Extends your agent's attestation validity period. Requires the agent's private key to sign the renewal request. The registry enforces a 30-day maximum, and any request beyond 30 days from now is capped server-side.
 
 ```bash
 # Renew for 30 days (default)
@@ -163,6 +163,16 @@ creduent renew \
 | `--key` | `./private_key.pem` | Path to the agent's private key PEM file |
 
 ---
+
+### 6. W3C DID Resolution
+
+Resolves `did:creduent` or `did:web` identifiers into a standard W3C Decentralized Identifier (DID) Document.
+
+```bash
+creduent did resolve did:creduent:idevsec:steward
+creduent did resolve did:web:myorg.com
+creduent did resolve agent://idevsec/steward
+```
 
 
 

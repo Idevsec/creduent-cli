@@ -61,6 +61,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1mwebhook query\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mQuery registered webhook URL for an agent\x1b[0m
   \x1b[1mwebhook verify\x1b[0m \x1b[35m[opts]\x1b[0m       \x1b[90mVerify the HMAC-SHA256 signature of a received webhook payload\x1b[0m
   \x1b[1mdiscover\x1b[0m \x1b[33m<uri>\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mDiscover an agent's capabilities (supports authentication)\x1b[0m
+  \x1b[1mdid resolve\x1b[0m \x1b[33m<agent-id|did>\x1b[0m   \x1b[90mResolve agent URI/DID to W3C DID Document & aliases\x1b[0m
   \x1b[1mrevoke\x1b[0m \x1b[35m[options]\x1b[0m            \x1b[90mPermanently revoke an agent's attestation (irreversible)\x1b[0m
 
 \x1b[1m\x1b[35mGLOBAL OPTIONS:\x1b[0m
@@ -634,12 +635,50 @@ async function main() {
             } else {
                 console.log(`\x1b[1m\x1b[32m│\x1b[0m    (None listed)`);
             }
-            console.log(
-                `\x1b[1m\x1b[32m└────────────────────────────────────────────────────────────────────────\x1b[0m\n`
-            );
         } catch (err: any) {
             console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err.message || err}`);
             process.exit(1);
+        }
+    }
+
+    // ── did ──────────────────────────────────────────────────────────────────
+    else if (command === "did") {
+        const subCommand = args[1];
+        const target = args[2] || flags["agent"];
+        if (subCommand === "resolve" || !subCommand) {
+            const inputUri = target || subCommand;
+            if (!inputUri || inputUri === "resolve") {
+                console.error("\x1b[1m\x1b[31mError: Please provide an agent URI or DID string.\x1b[0m\n\x1b[90m   Usage: creduent did resolve <agent_id|did>\x1b[0m");
+                process.exit(1);
+            }
+
+            try {
+                const { agentToDid, didToAgent, agentToDidDocument } = await import("./crypto.js");
+                let agentId = inputUri;
+                if (inputUri.startsWith("did:")) {
+                    agentId = didToAgent(inputUri);
+                }
+                const didCreduent = agentToDid(agentId, { method: "creduent" });
+                const didWeb = agentToDid(agentId, { method: "web" });
+
+                console.log(`\n\x1b[1m\x1b[32m┌── W3C DID INTEROPERABILITY ───────────────────────────────────────────\x1b[0m`);
+                console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mAgent ID\x1b[0m     : \x1b[36m${agentId}\x1b[0m`);
+                console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mdid:creduent\x1b[0m : \x1b[35m${didCreduent}\x1b[0m`);
+                console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mdid:web\x1b[0m      : \x1b[4m${didWeb}\x1b[0m`);
+                
+                try {
+                    const record = await resolveAgent(agentId, clientOptions);
+                    const didDoc = agentToDidDocument(record, { method: "creduent" });
+                    console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mW3C DID Document\x1b[0m:\n${JSON.stringify(didDoc, null, 2).split("\n").map(l => `\x1b[1m\x1b[32m│\x1b[0m    ${l}`).join("\n")}`);
+                } catch {
+                    const fallbackDoc = agentToDidDocument({ agent_id: agentId }, { method: "creduent" });
+                    console.log(`\x1b[1m\x1b[32m│\x1b[0m  \x1b[1mW3C DID Document (Offline/Fallback)\x1b[0m:\n${JSON.stringify(fallbackDoc, null, 2).split("\n").map(l => `\x1b[1m\x1b[32m│\x1b[0m    ${l}`).join("\n")}`);
+                }
+                console.log(`\x1b[1m\x1b[32m└────────────────────────────────────────────────────────────────────────\x1b[0m\n`);
+            } catch (err: any) {
+                console.error(`\x1b[1m\x1b[31mDID Error:\x1b[0m ${err.message || err}`);
+                process.exit(1);
+            }
         }
     } else if (command === "revoke") {
         // ── revoke ───────────────────────────────────────────────────────────────
