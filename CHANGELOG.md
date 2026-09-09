@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.1.4] - 2026-09-10
+
+### Changed
+- **SDK Dependency Update**: Updated `@idevsec/creduent` dependency to `^2.1.0`.
+- **IBRL Response Feedback**: Added HTTP 429 (Too Many Requests) error parsing and backoff recommendations for rate limit headers (`X-RateLimit-*`, `Retry-After`).
+
 ## [2.1.3] - 2026-08-06
 
 ### Changed

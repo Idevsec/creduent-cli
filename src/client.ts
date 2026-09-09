@@ -84,6 +84,14 @@ async function request<T>(url: string, method: "GET" | "POST" | "DELETE", body?:
 
     const text = await response.text();
     if (!response.ok) {
+        if (response.status === 429) {
+            const retryAfter = response.headers.get("retry-after") || "60";
+            const agentId = response.headers.get("x-creduent-agent-id") || "";
+            const msg = agentId
+                ? `Identity-Based Rate Limit reached for '${agentId}'. Retry after ${retryAfter}s or attest identity for higher limits.`
+                : `Rate limit reached. Retry after ${retryAfter}s.`;
+            throw new CreduentError(msg, 429, text);
+        }
         throw new CreduentError(
             `Creduent Registry returned an unexpected error (${response.status} ${response.statusText}): ${text}`,
             response.status,
