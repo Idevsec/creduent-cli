@@ -260,10 +260,14 @@ async function main() {
             capabilitiesStr = await promptUser("Capabilities (comma-separated)", capabilitiesStr || "chat, search");
         } else {
             agent = agent || "agent://myorg/mybot";
-            owner = owner || "My Organization";
+            owner = owner || `mailto:admin@${domain || "myorg.com"}`;
             domain = domain || "myorg.com";
             endpoint = endpoint || "https://api.myorg.com/agent";
             capabilitiesStr = capabilitiesStr || "chat, search";
+        }
+
+        if (owner && !owner.startsWith("mailto:") && !owner.startsWith("https://")) {
+            owner = owner.includes("@") ? `mailto:${owner}` : `mailto:admin@${domain || "myorg.com"}`;
         }
 
         const capabilities = capabilitiesStr
