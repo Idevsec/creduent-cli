@@ -50,7 +50,7 @@ creduent init
 # Non-interactive with flags
 creduent init \
   --agent agent://myorg/mybot \
-  --owner "My Organization" \
+  --owner "mailto:admin@myorg.com" \
   --domain myorg.com \
   --endpoint https://api.myorg.com/agent \
   --capabilities "chat,search" \
@@ -79,7 +79,7 @@ To publish and verify this identity:
 
 ### 2. Verify an Agent (Native Cryptographic)
 
-Downloads the agent identity document and validates the Ed25519 signature locally using the `@idevsec/creduent` SDK. No centralized trust, as verification is fully decentralized.
+Downloads the agent identity document and validates the Ed25519 signature locally using the `@idevsec/creduent` SDK. No centralized trust, as verification is fully decentralized. Also checks and displays DNSSEC verification status.
 
 ```bash
 creduent verify agent://idevsec/steward
@@ -90,8 +90,9 @@ creduent verify agent://idevsec/steward
 ```text
 Cryptographically VERIFIED!
 Agent ID:     agent://idevsec/steward
-Owner:        IDevSec
+Owner:        mailto:contact@idevsec.com
 Capabilities: verify, resolve, attest
+DNSSEC:       PASSED (RRSIG Verified)
 ```
 
 **Example Output (failed):**
