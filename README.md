@@ -129,20 +129,44 @@ Resolving: agent://idevsec/steward
 
 ### 4. Register a New Agent
 
-Registers a new AI agent identity with the Creduent registry by submitting its URI, domain, and the URL to its `agent.json` metadata document.
+Registers a new AI agent identity with the Creduent registry by submitting its URI, domain, and the URL to its `agent.json` metadata document. Supports automated 1-click DNS provisioning via `--auto-dns` ([CREDUENT-009](https://github.com/idevsec/creduent/blob/main/standards/CREDUENT-009-domain-connect.md)).
 
 ```bash
+# Standard registration with automated 1-click DNS provisioning
 creduent register \
   --agent agent://myorg/mybot \
   --domain myorg.com \
   --json-url https://myorg.com/.well-known/agent.json \
-  --meta env=production \
-  --meta version=1.0
+  --auto-dns
+
+# Programmatic registration via Cloudflare API token (Headless / CI/CD)
+creduent register \
+  --agent agent://myorg/mybot \
+  --domain myorg.com \
+  --json-url https://myorg.com/.well-known/agent.json \
+  --cloudflare-token $CLOUDFLARE_API_TOKEN
 ```
 
 ---
 
-### 5. Renew Agent Attestation
+### 5. Automated DNS Provisioning (1-Click Domain Connect)
+
+Automatically configures the `_creduent.<domain>` TXT record using the open Domain Connect protocol (`domainconnect.org`) supported by Cloudflare, GoDaddy, and Namecheap. Launches a local loopback server and opens your browser for 1-click authorization.
+
+```bash
+# Automatically detects agent.json in current directory
+creduent dns
+
+# Or explicitly pass domain and agent URI
+creduent dns --domain myorg.com --agent agent://myorg/mybot
+
+# Headless / CI/CD via Cloudflare API
+creduent dns --domain myorg.com --cloudflare-token $CLOUDFLARE_API_TOKEN
+```
+
+---
+
+### 6. Renew Agent Attestation
 
 Extends your agent's attestation validity period. Requires the agent's private key to sign the renewal request. The registry enforces a 30-day maximum, and any request beyond 30 days from now is capped server-side.
 

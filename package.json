@@ -1,6 +1,6 @@
 {
     "name": "@idevsec/creduent-cli",
-    "version": "2.2.1",
+    "version": "2.3.0",
     "type": "module",
     "description": "The official command-line interface for Creduent: the open standard and security protocol for cryptographic AI agent identity, authentication, and trust verification using Ed25519 and DNS.",
     "main": "./dist/esm/index.js",
@@ -27,7 +27,7 @@
         "build:cjs": "tsc -p tsconfig.cjs.json",
         "build": "npm run build:esm && npm run build:cjs",
         "prepublishOnly": "npm run build",
-        "test": "tsc -p test/tsconfig.json && node --test dist-test/test/client.test.js dist-test/test/crypto.test.js dist-test/test/utils.test.js"
+        "test": "tsc -p test/tsconfig.json && node --test dist-test/test/client.test.js dist-test/test/crypto.test.js dist-test/test/utils.test.js dist-test/test/domainconnect.test.js"
     },
     "keywords": [
         "creduent",

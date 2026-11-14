@@ -21,6 +21,7 @@ import readline from "readline";
 import { resolve, dirname } from "path";
 import { resolveAgent, verifyAgent, registerAgent, revokeAgent, CreduentError, AgentNotFoundError } from "./client.js";
 import { generateKeys, signDocument, signPayload } from "./crypto.js";
+import { runDomainConnectLoopback, provisionCloudflareDirect } from "./domainconnect.js";
 import { ClientOptions } from "./types.js";
 
 // Read version dynamically — works in both ESM and CJS builds
@@ -56,6 +57,7 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1mresolve\x1b[0m \x1b[33m<agent-uri>\x1b[0m         \x1b[90mResolve an agent's attestation record\x1b[0m
   \x1b[1mverify\x1b[0m \x1b[33m<agent-uri>\x1b[0m          \x1b[90mVerify if an agent is trusted/verified\x1b[0m
   \x1b[1mregister\x1b[0m \x1b[35m[options]\x1b[0m         \x1b[90mRegister a new agent identity with the registry\x1b[0m
+  \x1b[1mdns\x1b[0m \x1b[35m[options]\x1b[0m              \x1b[90m1-Click automated DNS TXT provisioning via Domain Connect\x1b[0m
   \x1b[1mrenew\x1b[0m \x1b[35m[options]\x1b[0m            \x1b[90mRenew agent attestation validity period using private key\x1b[0m
   \x1b[1mwebhook register\x1b[0m \x1b[35m[opts]\x1b[0m     \x1b[90mRegister a webhook URL to receive protocol updates\x1b[0m
   \x1b[1mwebhook query\x1b[0m \x1b[35m[opts]\x1b[0m        \x1b[90mQuery registered webhook URL for an agent\x1b[0m
@@ -81,7 +83,15 @@ GitHub: https://github.com/idevsec/creduent-cli\x1b[0m
   \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mCanonical agent URI (e.g. agent://myorg/mybot)\x1b[0m
   \x1b[1m--domain\x1b[0m \x1b[33m<domain>\x1b[0m         \x1b[90mAgent's DNS domain (e.g. myorg.com)\x1b[0m
   \x1b[1m--json-url\x1b[0m \x1b[33m<url>\x1b[0m         \x1b[90mURL serving the agent.json metadata file\x1b[0m
+  \x1b[1m--auto-dns\x1b[0m                 \x1b[90mAuto-provision DNS via Domain Connect before registering\x1b[0m
+  \x1b[1m--cloudflare-token\x1b[0m \x1b[33m<tok>\x1b[0m  \x1b[90mDirectly provision DNS record via Cloudflare API token\x1b[0m
   \x1b[1m--meta\x1b[0m \x1b[33mkey=value\x1b[0m          \x1b[90mCustom metadata key-value pair (can be used multiple times)\x1b[0m
+
+\x1b[1m\x1b[35mDNS OPTIONS:\x1b[0m
+  \x1b[1m--domain\x1b[0m \x1b[33m<domain>\x1b[0m         \x1b[90mTarget apex or subdomain (defaults to agent.json)\x1b[0m
+  \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI (defaults to agent.json)\x1b[0m
+  \x1b[1m--public-key\x1b[0m \x1b[33m<key>\x1b[0m        \x1b[90mAgent Ed25519 public key (defaults to agent.json)\x1b[0m
+  \x1b[1m--cloudflare-token\x1b[0m \x1b[33m<tok>\x1b[0m  \x1b[90mDirectly provision via Cloudflare API token without browser\x1b[0m
 
 \x1b[1m\x1b[35mRENEW OPTIONS:\x1b[0m
   \x1b[1m--agent\x1b[0m \x1b[33m<uri>\x1b[0m             \x1b[90mAgent URI to renew\x1b[0m
@@ -310,12 +320,27 @@ async function main() {
                 `  1. Host \x1b[1magent.json\x1b[0m at: \x1b[4mhttps://${domain}/.well-known/agent.json\x1b[0m`
             );
             console.log(
-                `  2. Add a DNS TXT record for \x1b[1m_creduent.${domain}\x1b[0m containing: \x1b[36m${agent}\x1b[0m`
+                `  2. Bind Domain DNS (1-Click via Domain Connect):`
+            );
+            console.log(
+                `     \x1b[1mcreduent dns --domain ${domain}\x1b[0m`
+            );
+            console.log(
+                `     \x1b[90m(Or manually add TXT _creduent.${domain} -> v=creduent1; agent=${agent}; k=${publicKeyStr})\x1b[0m`
             );
             console.log(`  3. Register your agent:`);
             console.log(
-                `     \x1b[1mcreduent register --agent ${agent} --domain ${domain} --json-url https://${domain}/.well-known/agent.json\x1b[0m\n`
+                `     \x1b[1mcreduent register --agent ${agent} --domain ${domain} --json-url https://${domain}/.well-known/agent.json --auto-dns\x1b[0m\n`
             );
+
+            if (flags["auto-dns"] === "true") {
+                console.log(`\n\x1b[36mRunning 1-click Domain Connect DNS provisioning...\x1b[0m`);
+                await runDomainConnectLoopback({
+                    domain,
+                    agentId: agent,
+                    publicKey: publicKeyStr,
+                });
+            }
         } catch (err) {
             console.error(`\x1b[1m\x1b[31mError writing files:\x1b[0m ${err}`);
             process.exit(1);
@@ -386,13 +411,61 @@ async function main() {
         const agent = flags["agent"];
         const domain = flags["domain"];
         const jsonUrl = flags["json-url"];
+        const autoDns = flags["auto-dns"] === "true";
+        const cfToken = flags["cloudflare-token"] || process.env.CLOUDFLARE_API_TOKEN;
 
         if (!agent || !domain || !jsonUrl) {
             console.error("\x1b[1m\x1b[31mError: Missing required flags.\x1b[0m");
             console.error(
-                "\x1b[90m   Usage: creduent register --agent <uri> --domain <domain> --json-url <url>\x1b[0m"
+                "\x1b[90m   Usage: creduent register --agent <uri> --domain <domain> --json-url <url> [--auto-dns]\x1b[0m"
             );
             process.exit(1);
+        }
+
+        // Pre-registration DNS auto-provisioning
+        if (cfToken || autoDns) {
+            let publicKey = flags["public-key"];
+            if (!publicKey && existsSync("./agent.json")) {
+                try {
+                    const doc = JSON.parse(await fs.readFile("./agent.json", "utf-8"));
+                    publicKey = doc.public_key;
+                } catch {}
+            }
+
+            if (cfToken) {
+                if (!publicKey) {
+                    console.error("\x1b[1m\x1b[31mError: Public key required for DNS provisioning. Pass --public-key or ensure agent.json exists.\x1b[0m");
+                    process.exit(1);
+                }
+                console.log(`\n\x1b[36mProvisioning DNS record via Cloudflare API token...\x1b[0m`);
+                const cfResult = await provisionCloudflareDirect({
+                    domain,
+                    agentId: agent,
+                    publicKey,
+                    cfToken,
+                });
+                if (cfResult.success) {
+                    console.log(`\x1b[1m\x1b[32m✔ Cloudflare TXT record provisioned successfully!\x1b[0m`);
+                } else {
+                    console.warn(`\x1b[33m⚠ Cloudflare API warning: ${cfResult.error}\x1b[0m`);
+                }
+            } else if (autoDns) {
+                if (!publicKey) {
+                    console.error("\x1b[1m\x1b[31mError: Public key required for Domain Connect. Pass --public-key or ensure agent.json exists.\x1b[0m");
+                    process.exit(1);
+                }
+                console.log(`\n\x1b[36mInitiating Domain Connect 1-click DNS provisioning...\x1b[0m`);
+                const dcResult = await runDomainConnectLoopback({
+                    domain,
+                    agentId: agent,
+                    publicKey,
+                });
+                if (dcResult.success) {
+                    console.log(`\x1b[1m\x1b[32m✔ DNS record confirmed by ${dcResult.providerName || "Registrar"}!\x1b[0m\n`);
+                } else {
+                    console.warn(`\x1b[33m⚠ Domain Connect setup was not completed (${dcResult.error || "Manual setup required"}). Proceeding with registration check...\x1b[0m`);
+                }
+            }
         }
 
         try {
@@ -410,6 +483,69 @@ async function main() {
                 console.error(`\x1b[1m\x1b[31mUnexpected error:\x1b[0m ${err}`);
             }
             process.exit(1);
+        }
+    }
+
+    // ── dns ──────────────────────────────────────────────────────────────────
+    else if (command === "dns" || command === "domain-connect") {
+        let domain = flags["domain"];
+        let agent = flags["agent"];
+        let publicKey = flags["public-key"];
+        const cfToken = flags["cloudflare-token"] || process.env.CLOUDFLARE_API_TOKEN;
+
+        // Auto-load from agent.json if present
+        if ((!domain || !agent || !publicKey) && existsSync("./agent.json")) {
+            try {
+                const doc = JSON.parse(await fs.readFile("./agent.json", "utf-8"));
+                if (!agent) agent = doc.agent_id;
+                if (!publicKey) publicKey = doc.public_key;
+                if (!domain && agent) {
+                    const match = agent.match(/^agent:\/\/([^/]+)/);
+                    if (match && match[1].includes(".")) {
+                        domain = match[1];
+                    }
+                }
+            } catch {}
+        }
+
+        if (!domain || !agent || !publicKey) {
+            console.error("\x1b[1m\x1b[31mError: Missing required parameters.\x1b[0m");
+            console.error("\x1b[90m   Usage: creduent dns --domain <domain> --agent <uri> --public-key <key>\x1b[0m");
+            console.error("\x1b[90m   (Or run inside a directory containing an agent.json file)\x1b[0m");
+            process.exit(1);
+        }
+
+        console.log(`\n\x1b[36mConfiguring DNS for agent:\x1b[0m \x1b[1m${agent}\x1b[0m (\x1b[4m${domain}\x1b[0m)`);
+
+        if (cfToken) {
+            console.log(`\x1b[36mDirectly provisioning via Cloudflare API token...\x1b[0m`);
+            const cfResult = await provisionCloudflareDirect({
+                domain,
+                agentId: agent,
+                publicKey,
+                cfToken,
+            });
+            if (cfResult.success) {
+                console.log(`\x1b[1m\x1b[32m✔ Cloudflare TXT record created successfully!\x1b[0m`);
+                console.log(`  TXT _creduent.${domain} -> v=creduent1; agent=${agent}; k=${publicKey}`);
+            } else {
+                console.error(`\x1b[1m\x1b[31mCloudflare error: ${cfResult.error}\x1b[0m`);
+                process.exit(1);
+            }
+        } else {
+            const dcResult = await runDomainConnectLoopback({
+                domain,
+                agentId: agent,
+                publicKey,
+            });
+            if (dcResult.success) {
+                console.log(`\x1b[1m\x1b[32m✔ DNS record confirmed by ${dcResult.providerName || "Registrar"}!\x1b[0m`);
+                console.log(`\x1b[36mYou can now register your agent:\x1b[0m`);
+                console.log(`  \x1b[1mcreduent register --agent ${agent} --domain ${domain} --json-url https://${domain}/.well-known/agent.json\x1b[0m\n`);
+            } else {
+                console.error(`\x1b[1m\x1b[31mDomain Connect error: ${dcResult.error || "Failed"}\x1b[0m`);
+                process.exit(1);
+            }
         }
     }
 

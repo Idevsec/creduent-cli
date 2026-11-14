@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [2.3.0] - 2026-11-15
+
+### Added
+- **`creduent dns` Command**: Introduced 1-click automated DNS TXT record provisioning implementing CREDUENT-009 / Domain Connect. Automatically reads `agent.json` or accepts CLI flags (`--domain`, `--agent`, `--public-key`).
+- **Domain Connect Discovery**: Added native `_domainconnect.<domain>` DNS TXT resolution with Cloudflare DNS-over-HTTPS (DoH) fallback to query provider settings endpoints (`/v2/<domain>/settings`).
+- **Ephemeral Loopback Server**: Implemented local HTTP callback server (`127.0.0.1:<port>/callback`) with CSPRNG anti-CSRF state token validation and automatic cross-platform browser opening.
+- **Direct Headless Provisioning (`--cloudflare-token`)**: Added direct Cloudflare REST API integration allowing headless DNS TXT creation and updates in ~200ms without browser interaction, perfect for automated CI/CD and production agent deployments.
+- **Workflow Flags (`--auto-dns`, `--cloudflare-token`)**: Integrated automatic DNS provisioning flags directly into `creduent register` and `creduent init` commands.
+- **Automated Unit Tests**: Added unit tests in `test/domainconnect.test.ts` covering provider discovery, flag parsing, and error conditions.
+
 ## [2.2.1] - 2026-09-15
 
 ### Added
